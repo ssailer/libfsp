@@ -29,7 +29,7 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
-install_headers('src/fsp.h', 'src/fsp_l200.h')
+install_headers('src/fsp.h', 'src/fsp_l200.h', 'src/fsp_channelmaps.h')
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(fsp_lib)
