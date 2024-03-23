@@ -4,61 +4,61 @@
 #include <stdlib.h>
 #include <yopt.h>
 
-static inline int parse_int_array(const char *par, int n, int *data) {
-  int i;
-  for (i = 0; i < n && par; i++) {
-    if (sscanf(par, "%d", &data[i]) != 1) break;
-    par = strstr(par, ",");
-    if (par) par++;
-    // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
-  }
-  return i;
-}
+// static inline int parse_int_array(const char *par, int n, int *data) {
+//   int i;
+//   for (i = 0; i < n && par; i++) {
+//     if (sscanf(par, "%d", &data[i]) != 1) break;
+//     par = strstr(par, ",");
+//     if (par) par++;
+//     // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
+//   }
+//   return i;
+// }
 
-static inline int parse_number_array(const char *par, int n, int *data) {
-  int i;
-  for (i = 0; i < n && par; i++) {
-    const long num = strtol(par, NULL, 0);
-    data[i] = num;
-    par = strstr(par, ",");
-    if (par) par++;
-    // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
-  }
-  return i;
-}
+// static inline int parse_number_array(const char *par, int n, int *data) {
+//   int i;
+//   for (i = 0; i < n && par; i++) {
+//     const long num = strtol(par, NULL, 0);
+//     data[i] = num;
+//     par = strstr(par, ",");
+//     if (par) par++;
+//     // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
+//   }
+//   return i;
+// }
 
-static inline int parse_hex_array(const char *par, int n, int *data) {
-  int i;
-  for (i = 0; i < n && par; i++) {
-    if (sscanf(par, "%x", &data[i]) != 1) break;
-    par = strstr(par, ",");
-    if (par) par++;
-    // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
-  }
-  return i;
-}
+// static inline int parse_hex_array(const char *par, int n, int *data) {
+//   int i;
+//   for (i = 0; i < n && par; i++) {
+//     if (sscanf(par, "%x", &data[i]) != 1) break;
+//     par = strstr(par, ",");
+//     if (par) par++;
+//     // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
+//   }
+//   return i;
+// }
 
-static inline int parse_ushort_array(const char *par, int n, unsigned short *data) {
-  int i;
-  for (i = 0; i < n && par; i++) {
-    if (sscanf(par, "%hu", &data[i]) != 1) break;
-    par = strstr(par, ",");
-    if (par) par++;
-    // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
-  }
-  return i;
-}
+// static inline int parse_ushort_array(const char *par, int n, unsigned short *data) {
+//   int i;
+//   for (i = 0; i < n && par; i++) {
+//     if (sscanf(par, "%hu", &data[i]) != 1) break;
+//     par = strstr(par, ",");
+//     if (par) par++;
+//     // fprintf(stderr,"getintarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
+//   }
+//   return i;
+// }
 
-static inline int parse_float_array(const char *par, int n, float *data) {
-  int i;
-  for (i = 0; i < n && par; i++) {
-    if (sscanf(par, "%f", &data[i]) != 1) break;
-    par = strstr(par, ",");
-    if (par) par++;
-    // fprintf(stderr,"getfloatarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
-  }
-  return i;
-}
+// static inline int parse_float_array(const char *par, int n, float *data) {
+//   int i;
+//   for (i = 0; i < n && par; i++) {
+//     if (sscanf(par, "%f", &data[i]) != 1) break;
+//     par = strstr(par, ",");
+//     if (par) par++;
+//     // fprintf(stderr,"getfloatarray: index %d value %x ... %s\n",i,data[i],(par)?par:"");
+//   }
+//   return i;
+// }
 
 #define MAXBUFLEN 4096
 #define MAXARGS 128

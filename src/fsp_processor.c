@@ -10,8 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <l200_channelmaps.h>
-
+#include <fsp_channelmaps.h>
 
 /* taken from falcon-daq*/
 
@@ -216,12 +215,12 @@ static inline FSPFlags fsp_st_analogue_sum(StreamProcessor* processor, FSPFlags 
         stop = processor->wps_cfg->trigger_list.stop[i];
 
       fprintf(stderr, " pe=%.1f,start=%d,stop=%d,size=%d,time_us=%.3f",
-      processor->wps_cfg->trigger_list.wps_max[i],
-      processor->wps_cfg->trigger_list.start[i],
-      processor->wps_cfg->trigger_list.stop[i],
-      processor->wps_cfg->trigger_list.stop[i] - processor->wps_cfg->trigger_list.start[i],
-      (processor->wps_cfg->trigger_list.stop[i] - processor->wps_cfg->trigger_list.start[i])*16e-3
-    );
+        processor->wps_cfg->trigger_list.wps_max[i],
+        processor->wps_cfg->trigger_list.start[i],
+        processor->wps_cfg->trigger_list.stop[i],
+        processor->wps_cfg->trigger_list.stop[i] - processor->wps_cfg->trigger_list.start[i],
+        (processor->wps_cfg->trigger_list.stop[i] - processor->wps_cfg->trigger_list.start[i])*16e-3
+      );
     }
 
     // int start = config->eventsamples;
@@ -254,7 +253,7 @@ static inline FSPFlags fsp_st_analogue_sum(StreamProcessor* processor, FSPFlags 
   }
 
   if (processor->wps_cfg->max_peak_sum >= processor->sum_threshold_pe) {
-    flags.trigger |= ST_TRIGGER_SIPM_NPE;
+    flags.trigger |= ST_WPS_THRESHOLD;
   }
 
   if (processor->wps_cfg->max_peak_sum >= processor->windowed_sum_threshold_pe) {
@@ -297,7 +296,7 @@ static inline FSPFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fl
       processor->ge_prescaling_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
     }
     else if (timestamp_geq(event_unix_timestamp, processor->ge_prescaling_timestamp)) {
-      flags.trigger |= ST_TRIGGER_GE_PRESCALED;
+      flags.trigger |= ST_HWM_PRESCALED;
       Timestamp next_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
       if (processor->loglevel >= 4)
         fprintf(stderr, "DEBUG ge_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
@@ -324,7 +323,7 @@ static inline FSPFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fl
         processor->sipm_prescaling_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
       }
       else if (timestamp_geq(event_unix_timestamp, processor->sipm_prescaling_timestamp)) {
-        flags.trigger |= ST_TRIGGER_SIPM_PRESCALED;
+        flags.trigger |= ST_WPS_PRESCALED;
         Timestamp next_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
         if (processor->loglevel >= 4)
         fprintf(stderr, "DEBUG sipm_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
@@ -339,7 +338,7 @@ static inline FSPFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fl
     }
     case 'o': {
       if (processor->sipm_prescaling_counter == processor->sipm_prescaling_offset) {
-        flags.trigger |= ST_TRIGGER_SIPM_PRESCALED;
+        flags.trigger |= ST_WPS_PRESCALED;
         processor->sipm_prescaling_counter = 0;
 
       } else {
@@ -424,7 +423,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       // format == 0 is already converted to trace indices used by fcio
       if (processor->aux.tracemap_format) {
         if (processor->aux.pulser_trace_index > 0) {
-          if (!convert_trace_idx(1, &processor->aux.pulser_trace_index, processor->aux.tracemap_format,
+          if (!convert2traceidx(1, &processor->aux.pulser_trace_index, processor->aux.tracemap_format,
                                  state->config->tracemap)) {
             fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux pulser channel could not be mapped.\n");
             return -1;
@@ -434,7 +433,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
           }
         }
         if (processor->aux.baseline_trace_index > 0) {
-          if (!convert_trace_idx(1, &processor->aux.baseline_trace_index, processor->aux.tracemap_format,
+          if (!convert2traceidx(1, &processor->aux.baseline_trace_index, processor->aux.tracemap_format,
                                  state->config->tracemap)) {
             fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux baseline channel could not be mapped.\n");
             return -1;
@@ -444,7 +443,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
           }
         }
         if (processor->aux.muon_trace_index > 0) {
-          if (!convert_trace_idx(1, &processor->aux.muon_trace_index, processor->aux.tracemap_format,
+          if (!convert2traceidx(1, &processor->aux.muon_trace_index, processor->aux.tracemap_format,
                                  state->config->tracemap)) {
             fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux muon channel could not be mapped.\n");
             return -1;
@@ -457,7 +456,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
       if (processor->wps_cfg) {
         if (processor->wps_cfg->tracemap_format) {
-          int success = convert_trace_idx(processor->wps_cfg->ntraces, processor->wps_cfg->tracemap,
+          int success = convert2traceidx(processor->wps_cfg->ntraces, processor->wps_cfg->tracemap,
                                           processor->wps_cfg->tracemap_format, state->config->tracemap);
           if (processor->loglevel >= 4) {
             for (int i = 0; i < processor->wps_cfg->ntraces; i++) {
@@ -516,7 +515,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
       if (processor->hwm_cfg) {
         if (processor->hwm_cfg->tracemap_format) {
-          int success = convert_trace_idx(processor->hwm_cfg->ntraces, processor->hwm_cfg->tracemap,
+          int success = convert2traceidx(processor->hwm_cfg->ntraces, processor->hwm_cfg->tracemap,
                                           processor->hwm_cfg->tracemap_format, state->config->tracemap);
           if (processor->loglevel >= 4) {
             for (int i = 0; i < processor->hwm_cfg->ntraces; i++) {
@@ -562,7 +561,7 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
     fsp_state->flags.event |= EVT_FORCE_POST_WINDOW;
 
     if (fsp_state->flags.event & EVT_ASUM_MIN_NPE) {
-      fsp_state->flags.trigger |= ST_TRIGGER_SIPM_NPE_IN_WINDOW;
+      fsp_state->flags.trigger |= ST_WPS_RELTRIGGER;
     }
   }
 
@@ -584,7 +583,7 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
         continue;
       update_fsp_state->flags.event |= EVT_FORCE_PRE_WINDOW;
       if (update_fsp_state->flags.event & EVT_ASUM_MIN_NPE) {
-        update_fsp_state->flags.trigger |= ST_TRIGGER_SIPM_NPE_IN_WINDOW;
+        update_fsp_state->flags.trigger |= ST_WPS_RELTRIGGER;
       }
     }
   }
@@ -682,11 +681,13 @@ void FSPEnableEventFlags(StreamProcessor* processor, unsigned int flags) {
 StreamProcessor* FSPCreate(void) {
   StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
 
+  processor->stats = calloc(1, sizeof(FSPStats));
+
   processor->minimum_buffer_window.seconds = 0;
   processor->minimum_buffer_window.nanoseconds =
       (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
   processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
-  processor->stats.start_time = 0.0;    // reset, actual start time happens with the first record insertion.
+  processor->stats->start_time = 0.0;    // reset, actual start time happens with the first record insertion.
   processor->ge_prescaling_timestamp.seconds = -1; // will init when it's needed
   processor->sipm_prescaling_timestamp.seconds = -1; // will init when it's needed
 
@@ -699,15 +700,15 @@ StreamProcessor* FSPCreate(void) {
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
   FSPEnableEventFlags(processor, EVT_AUX_PULSER | EVT_AUX_BASELINE | EVT_EXTENDED | EVT_RETRIGGER);
-  FSPEnableTriggerFlags(processor, ST_TRIGGER_FORCE | ST_TRIGGER_SIPM_NPE_IN_WINDOW | ST_TRIGGER_SIPM_NPE |
-                                       ST_TRIGGER_SIPM_PRESCALED | ST_TRIGGER_GE_PRESCALED);
+  FSPEnableTriggerFlags(processor, ST_TRIGGER_FORCE | ST_WPS_RELTRIGGER | ST_WPS_THRESHOLD |
+                                       ST_WPS_PRESCALED | ST_HWM_PRESCALED);
 
   return processor;
 }
 
 void FSPSetLogLevel(StreamProcessor* processor, int loglevel) { processor->loglevel = loglevel; }
 
-void FSPSetLogTime(StreamProcessor* processor, double log_time) { processor->stats.log_time = log_time; }
+void FSPSetLogTime(StreamProcessor* processor, double log_time) { processor->stats->log_time = log_time; }
 
 int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
   if (processor->buffer) {
@@ -732,6 +733,7 @@ int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
 
 void FSPDestroy(StreamProcessor* processor) {
   FSPBufferDestroy(processor->buffer);
+  free(processor->stats);
   free(processor->hwm_cfg);
   free(processor->wps_cfg);
   free(processor);
@@ -750,57 +752,10 @@ int LPPFreeStates(StreamProcessor* processor) {
 }
 
 static inline void fsp_init_stats(StreamProcessor* processor) {
-  FSPStats* stats = &processor->stats;
+  FSPStats* stats = processor->stats;
   if (stats->start_time == 0.0) {
     stats->dt_logtime = stats->start_time = elapsed_time(0.0);
   }
-}
-
-int FSPStatsUpdate(StreamProcessor* processor, int force) {
-  FSPStats* stats = &processor->stats;
-
-  if (elapsed_time(stats->dt_logtime) > stats->log_time || force) {
-    stats->runtime = elapsed_time(stats->start_time);
-    stats->dt_current = elapsed_time(stats->dt_logtime);
-    stats->dt_logtime = elapsed_time(0.0);
-
-    stats->current_nread = processor->nevents_read - stats->n_read_events;
-    stats->n_read_events = processor->nevents_read;
-
-    stats->current_nwritten = processor->nevents_written - stats->n_written_events;
-    stats->n_written_events = processor->nevents_written;
-
-    stats->current_ndiscarded = processor->nevents_discarded - stats->n_discarded_events;
-    stats->n_discarded_events = processor->nevents_discarded;
-
-    stats->current_read_rate = stats->current_nread / stats->dt_current;
-    stats->current_write_rate = stats->current_nwritten / stats->dt_current;
-    stats->current_discard_rate = stats->current_ndiscarded / stats->dt_current;
-
-    stats->avg_read_rate = stats->n_read_events / stats->runtime;
-    stats->avg_write_rate = stats->n_written_events / stats->runtime;
-    stats->avg_discard_rate = stats->n_discarded_events / stats->runtime;
-
-    return 1;
-  }
-  return 0;
-}
-
-int FSPStatsInfluxString(StreamProcessor* processor, char* logstring, size_t logstring_size) {
-  //  if (LPPStatsUpdate(processor, !fsp_state)) {
-
-  FSPStats* stats = &processor->stats;
-
-  int ret = snprintf(logstring, logstring_size,
-                     "run_time=%.03f,cur_read=%.03f,cur_write=%.03f,cur_discard=%.03f,avg_read=%.03f,avg_write=%.03f,"
-                     "avg_discard=%.03f,cur_nread=%d,cur_nsent=%d,total_nread=%d,total_nsent=%d,total_ndiscarded=%d",
-                     stats->runtime, stats->current_read_rate, stats->current_write_rate, stats->current_discard_rate,
-                     stats->avg_read_rate, stats->avg_write_rate, stats->avg_discard_rate, stats->current_nread,
-                     stats->current_nwritten, stats->n_read_events, stats->n_written_events, stats->n_discarded_events);
-
-  if (ret >= 0 && ret < (int)logstring_size) return 1;
-  //  }
-  return 0;
 }
 
 FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, int* timedout) {

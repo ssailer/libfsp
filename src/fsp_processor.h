@@ -7,34 +7,10 @@
 #include <fsp_buffer.h>
 #include <fsp_state.h>
 #include <fsp_timestamps.h>
+#include <fsp_stats.h>
 
 #include <time_utils.h>
 #include <fcio.h>
-
-typedef struct FSPStats {
-  double start_time;
-  double log_time;
-  double dt_logtime;
-  double runtime;
-
-  int n_read_events;
-  int n_written_events;
-  int n_discarded_events;
-
-  int current_nread;
-  int current_nwritten;
-  int current_ndiscarded;
-
-  double dt_current;
-  double current_read_rate;
-  double current_write_rate;
-  double current_discard_rate;
-
-  double avg_read_rate;
-  double avg_write_rate;
-  double avg_discard_rate;
-
-} FSPStats;
 
 typedef struct StreamProcessor {
   Timestamp pre_trigger_window;
@@ -71,7 +47,7 @@ typedef struct StreamProcessor {
 
   int loglevel;
 
-  FSPStats stats;
+  FSPStats* stats;
 
   int checks;
 
@@ -127,5 +103,6 @@ FSPState *FSPOutput(StreamProcessor *processor);
 int FSPFlush(StreamProcessor *processor);
 int LPPFreeStates(StreamProcessor *processor);
 FSPState *FSPGetNextState(StreamProcessor *processor, FCIOStateReader *reader, int *timedout);
-int FSPStatsUpdate(StreamProcessor *processor, int force);
-int FSPStatsInfluxString(StreamProcessor *processor, char *logstring, size_t logstring_size);
+
+int FSPStatsInfluxString(StreamProcessor* processor, char* logstring, size_t logstring_size);
+int FSPStatsUpdate(StreamProcessor* processor, int force);

@@ -10,10 +10,10 @@ typedef enum SoftwareTriggerFlags {
 
   ST_NULL = 0,
   ST_TRIGGER_FORCE = 1 << 0,
-  ST_TRIGGER_SIPM_NPE = 1 << 1,
-  ST_TRIGGER_SIPM_NPE_IN_WINDOW = 1 << 2,
-  ST_TRIGGER_SIPM_PRESCALED = 1 << 3,
-  ST_TRIGGER_GE_PRESCALED = 1 << 4,
+  ST_WPS_THRESHOLD = 1 << 1,
+  ST_WPS_RELTRIGGER = 1 << 2,
+  ST_WPS_PRESCALED = 1 << 3,
+  ST_HWM_PRESCALED = 1 << 4,
 
 } SoftwareTriggerFlags;
 
@@ -35,8 +35,10 @@ typedef enum EventFlags {
 } EventFlags;
 
 typedef struct FSPFlags {
+
   unsigned int trigger;
   unsigned int event;
+
 } FSPFlags;
 
 typedef struct FSPState {
@@ -50,14 +52,14 @@ typedef struct FSPState {
   /* calculate observables if event */
   FSPFlags flags;
   // Peak Sum
-  float wps_max_value;    // what is the maximum PE within the integration windows
+  float wps_max_value; // what is the maximum PE within the integration windows
   int wps_max_sample;  // when is the total sum offset reached?
 
   int wps_multiplicity;  // How many channels did have a peak above thresholds
-  float wps_max_single_peak_value;          // which one was the largest individual peak
+  float wps_max_single_peak_value;   // which one was the largest individual peak
 
   // FPGA Majority
-  int hwm_multiplicity;                       // how many channels have fpga_energy > 0
+  int hwm_multiplicity;          // how many channels have fpga_energy > 0
   unsigned short hwm_max_value;  // what is the largest fpga_energy of those
   unsigned short hwm_min_value;  // what is the smallest fpga_energy of those
 

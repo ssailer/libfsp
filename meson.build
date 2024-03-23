@@ -18,7 +18,7 @@ m_dep = cc.find_library('m', required : true)
 fcio_dep = dependency('fcio', fallback : ['fcio', 'fcio_dep'])
 
 fsp_inc = include_directories('src')
-fsp_sources = files('src/fsp_processor.c', 'src/fsp_buffer.c', 'src/fsp_dsp.c', 'src/fsp_timestamps.c')
+fsp_sources = files('src/fsp_processor.c', 'src/fsp_buffer.c', 'src/fsp_dsp.c', 'src/fsp_stats.c', 'src/fsp_timestamps.c')
 
 fsp_lib = library('fsp',
   fsp_sources,
@@ -29,7 +29,7 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
-install_headers('src/fsp.h')
+install_headers('src/fsp.h', 'src/fsp_l200.h')
 
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(fsp_lib)

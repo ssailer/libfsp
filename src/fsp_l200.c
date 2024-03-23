@@ -1,14 +1,15 @@
-#include "l200.h"
+#include "fsp_l200.h"
 
-int FSPSetAuxParameters(StreamProcessor* processor, const char* channelmap_format, int digital_pulser_channel,
+int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int digital_pulser_channel,
                         int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,
                         int digital_muon_channel, int muon_level_adc) {
-  if ((processor->aux.tracemap_format = get_channelmap_format(channelmap_format)) < 0) {
+  if (is_known_channelmap_format(format)) {
+    processor->aux.tracemap_format = format;
     if (processor->loglevel)
       fprintf(stderr,
               "ERROR LPPSetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
-              channelmap_format);
+              channelmap_format_string(format));
     return 0;
   }
 
@@ -21,7 +22,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, const char* channelmap_forma
 
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG LPPSetAuxParameters\n");
-    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", processor->aux.tracemap_format, channelmap_format);
+    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", processor->aux.tracemap_format, channelmap_format_string(format));
     if (processor->aux.tracemap_format == 1) {
       fprintf(stderr, "DEBUG digital_pulser_channel   0x%x level_adc %d\n", processor->aux.pulser_trace_index,
               processor->aux.pulser_adc_threshold);
@@ -41,18 +42,19 @@ int FSPSetAuxParameters(StreamProcessor* processor, const char* channelmap_forma
   return 1;
 }
 
-int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelmap, const char* channelmap_format,
+int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPChannelFormat format,
                        int majority_threshold, int skip_full_counting, unsigned short* ge_prescaling_threshold_adc,
                        float ge_average_prescaling_rate_hz) {
   processor->hwm_cfg = calloc(1, sizeof(HardwareMajorityConfig));
   HardwareMajorityConfig* fmc = processor->hwm_cfg;
 
-  if ((fmc->tracemap_format = get_channelmap_format(channelmap_format)) < 0) {
+  if (is_known_channelmap_format(format)) {
+    fmc->tracemap_format = format;
     if (processor->loglevel)
       fprintf(stderr,
               "ERROR LPPSetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
-              channelmap_format);
+              channelmap_format_string(format));
     free(fmc);
     return 0;
   }
@@ -81,7 +83,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
     fprintf(stderr, "DEBUG majority_threshold %d\n", majority_threshold);
     fprintf(stderr, "DEBUG average_prescaling_rate_hz %f\n", ge_average_prescaling_rate_hz);
     fprintf(stderr, "DEBUG skip_full_counting %d\n", fmc->fast);
-    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", fmc->tracemap_format, channelmap_format);
+    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", fmc->tracemap_format, channelmap_format_string(format));
     for (int i = 0; i < fmc->ntraces; i++) {
       if (fmc->tracemap_format == 1) {
         fprintf(stderr, "DEBUG channel 0x%x\n", fmc->tracemap[i]);
@@ -93,7 +95,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   return 1;
 }
 
-int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channelmap, const char* channelmap_format,
+int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPChannelFormat format,
                          float* calibration_pe_adc, float* channel_thresholds_pe, int* shaping_width_samples,
                          float* lowpass_factors, int coincidence_pre_window_ns, int coincidence_post_window_ns,
                          int coincidence_window_samples, int sum_window_start_sample, int sum_window_stop_sample,
@@ -102,12 +104,13 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   processor->wps_cfg = calloc(1, sizeof(WindowedPeakSumConfig));
   WindowedPeakSumConfig* asc = processor->wps_cfg;
 
-  if ((asc->tracemap_format = get_channelmap_format(channelmap_format)) < 0) {
+  if (is_known_channelmap_format(format)) {
+    asc->tracemap_format = format;
     if (processor->loglevel)
       fprintf(stderr,
               "CRITICAL LPPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
               "\"fcio-trace-index\", \"fcio-tracemap\" or \"rawid\".\n",
-              channelmap_format);
+              channelmap_format_string(format));
     free(asc);
     return 0;
   }
@@ -193,7 +196,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   if (processor->loglevel >= 4) {
     /* DEBUGGING enabled, print all inputs */
     fprintf(stderr, "DEBUG LPPSetSiPMParameters:\n");
-    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", asc->tracemap_format, channelmap_format);
+    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", asc->tracemap_format, channelmap_format_string(format));
     fprintf(stderr, "DEBUG average_prescaling_rate_hz   %f\n", processor->sipm_prescaling_rate);
     fprintf(stderr, "DEBUG sum_window_start_sample      %d\n", asc->sum_window_start_sample);
     fprintf(stderr, "DEBUG sum_window_stop_sample       %d\n", asc->sum_window_stop_sample);
@@ -247,10 +250,10 @@ static inline void st_flag_2char(char* string, size_t strlen, unsigned int st_fl
   assert(strlen >= 5);
 
   if (st_flags & ST_TRIGGER_FORCE) string[0] = 'F';
-  if (st_flags & ST_TRIGGER_SIPM_NPE_IN_WINDOW) string[1] = 'C';
-  if (st_flags & ST_TRIGGER_SIPM_NPE) string[2] = 'N';
-  if (st_flags & ST_TRIGGER_SIPM_PRESCALED) string[3] = 'S';
-  if (st_flags & ST_TRIGGER_GE_PRESCALED) string[4] = 'G';
+  if (st_flags & ST_WPS_RELTRIGGER) string[1] = 'C';
+  if (st_flags & ST_WPS_THRESHOLD) string[2] = 'N';
+  if (st_flags & ST_WPS_PRESCALED) string[3] = 'S';
+  if (st_flags & ST_HWM_PRESCALED) string[4] = 'G';
 
   // string[10] = '\0';
 }
