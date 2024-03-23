@@ -2,8 +2,8 @@
 
 #include <fcio.h>
 
-#include <timestamps.h>
-#include <dsp.h>
+#include <fsp_timestamps.h>
+#include <fsp_dsp.h>
 
 #define ST_NSTATES 6
 typedef enum SoftwareTriggerFlags {

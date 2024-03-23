@@ -18,7 +18,7 @@ m_dep = cc.find_library('m', required : true)
 fcio_dep = dependency('fcio', fallback : ['fcio', 'fcio_dep'])
 
 fsp_inc = include_directories('src')
-fsp_sources = files('src/fsp.c', 'src/buffer.c', 'src/dsp.c', 'src/timestamps.c')
+fsp_sources = files('src/fsp_processor.c', 'src/fsp_buffer.c', 'src/fsp_dsp.c', 'src/fsp_timestamps.c')
 
 fsp_lib = library('fsp',
   fsp_sources,

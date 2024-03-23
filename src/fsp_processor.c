@@ -3,7 +3,7 @@
 /* needed for random() */
 #endif
 
-#include "fsp.h"
+#include "fsp_processor.h"
 
 #include <assert.h>
 #include <math.h>

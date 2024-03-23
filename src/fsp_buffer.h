@@ -1,7 +1,7 @@
 #pragma once
 
-#include <state.h>
-#include <timestamps.h>
+#include <fsp_state.h>
+#include <fsp_timestamps.h>
 
 typedef struct FSPBuffer {
   int insert_state;
