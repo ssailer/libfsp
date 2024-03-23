@@ -96,7 +96,7 @@ void FSPEnableEventFlags(StreamProcessor *processor, unsigned int flags);
   - if states are null, buffer is flushed
 */
 
-void FSPFlags2Char(FSPState *fsp_state, size_t strlen, char *cstring);
+
 
 int FSPInput(StreamProcessor *processor, FCIOState *state);
 FSPState *FSPOutput(StreamProcessor *processor);

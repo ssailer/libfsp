@@ -1,5 +1,8 @@
 #include "fsp_l200.h"
 
+#include <assert.h>
+#include <stdlib.h>
+
 int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int digital_pulser_channel,
                         int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,
                         int digital_muon_channel, int muon_level_adc) {
@@ -9,7 +12,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
       fprintf(stderr,
               "ERROR LPPSetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
-              channelmap_format_string(format));
+              channelmap_fmt2str(format));
     return 0;
   }
 
@@ -22,7 +25,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
 
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG LPPSetAuxParameters\n");
-    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", processor->aux.tracemap_format, channelmap_format_string(format));
+    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", processor->aux.tracemap_format, channelmap_fmt2str(format));
     if (processor->aux.tracemap_format == 1) {
       fprintf(stderr, "DEBUG digital_pulser_channel   0x%x level_adc %d\n", processor->aux.pulser_trace_index,
               processor->aux.pulser_adc_threshold);
@@ -54,7 +57,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
       fprintf(stderr,
               "ERROR LPPSetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
-              channelmap_format_string(format));
+              channelmap_fmt2str(format));
     free(fmc);
     return 0;
   }
@@ -83,7 +86,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
     fprintf(stderr, "DEBUG majority_threshold %d\n", majority_threshold);
     fprintf(stderr, "DEBUG average_prescaling_rate_hz %f\n", ge_average_prescaling_rate_hz);
     fprintf(stderr, "DEBUG skip_full_counting %d\n", fmc->fast);
-    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", fmc->tracemap_format, channelmap_format_string(format));
+    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", fmc->tracemap_format, channelmap_fmt2str(format));
     for (int i = 0; i < fmc->ntraces; i++) {
       if (fmc->tracemap_format == 1) {
         fprintf(stderr, "DEBUG channel 0x%x\n", fmc->tracemap[i]);
@@ -110,7 +113,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
       fprintf(stderr,
               "CRITICAL LPPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
               "\"fcio-trace-index\", \"fcio-tracemap\" or \"rawid\".\n",
-              channelmap_format_string(format));
+              channelmap_fmt2str(format));
     free(asc);
     return 0;
   }
@@ -196,7 +199,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   if (processor->loglevel >= 4) {
     /* DEBUGGING enabled, print all inputs */
     fprintf(stderr, "DEBUG LPPSetSiPMParameters:\n");
-    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", asc->tracemap_format, channelmap_format_string(format));
+    fprintf(stderr, "DEBUG channelmap_format %d : %s\n", asc->tracemap_format, channelmap_fmt2str(format));
     fprintf(stderr, "DEBUG average_prescaling_rate_hz   %f\n", processor->sipm_prescaling_rate);
     fprintf(stderr, "DEBUG sum_window_start_sample      %d\n", asc->sum_window_start_sample);
     fprintf(stderr, "DEBUG sum_window_stop_sample       %d\n", asc->sum_window_stop_sample);

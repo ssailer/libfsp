@@ -21,7 +21,7 @@ static inline int is_known_channelmap_format(FSPChannelFormat format)
   }
 }
 
-static inline const char* channelmap_format_string(FSPChannelFormat format)
+static inline const char* channelmap_fmt2str(FSPChannelFormat format)
 {
   switch (format) {
     case FCIO_TRACE_INDEX_FORMAT:
@@ -31,8 +31,20 @@ static inline const char* channelmap_format_string(FSPChannelFormat format)
     case L200_RAWID_FORMAT:
       return "l200-rawid";
     default:
-      return NULL;
+      return "";
   }
+}
+
+static inline FSPChannelFormat channelmap_str2fmt(const char* str)
+{
+  if (strncmp(str, "fcio-trace-idx", 14) == 0)
+    return FCIO_TRACE_INDEX_FORMAT;
+  else if (strncmp(str, "fcio-trace-map", 14) == 0)
+    return FCIO_TRACE_MAP_FORMAT;
+  else if (strncmp(str, "l200-rawid", 10) == 0)
+    return L200_RAWID_FORMAT;
+  else
+    return FSPChannelFormatUnkown;
 }
 
 static inline unsigned int rawid2tracemap(int input) {
