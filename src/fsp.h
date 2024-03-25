@@ -34,7 +34,7 @@ void FSPEnableEventFlags(StreamProcessor *processor, unsigned int flags);
 int FSPInput(StreamProcessor *processor, FCIOState *state);
 FSPState *FSPOutput(StreamProcessor *processor);
 int FSPFlush(StreamProcessor *processor);
-int LPPFreeStates(StreamProcessor *processor);
+int FSPFreeStates(StreamProcessor *processor);
 FSPState *FSPGetNextState(StreamProcessor *processor, FCIOStateReader *reader, int *timedout);
 
 int FSPStatsInfluxString(StreamProcessor* processor, char* logstring, size_t logstring_size);

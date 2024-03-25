@@ -14,7 +14,7 @@ int FSPInput(StreamProcessor* processor, FCIOState* state) {
   FSPState* fsp_state = FSPBufferPeekState(processor->buffer);
 
   if (!fsp_state) {
-    fprintf(stderr, "CRITICAL LPPInput: Buffer full, refuse to overwrite.\n");
+    fprintf(stderr, "CRITICAL FSPInput: Buffer full, refuse to overwrite.\n");
     return 0;
   }
   if ((state->last_tag == FCIOEvent) || (state->last_tag == FCIOSparseEvent)) {
@@ -28,7 +28,7 @@ int FSPInput(StreamProcessor* processor, FCIOState* state) {
 
   if (!rc)
     return 0;  // This is a proxy for 0 free states, even though we do have some. Something in previous code did not
-               // work out, and the LPPGetNextState function returns NULL on nfree = 0;
+               // work out, and the FSPGetNextState function returns NULL on nfree = 0;
 
   return FSPBufferFreeLevel(processor->buffer);
 }
@@ -66,12 +66,12 @@ FSPState* FSPOutput(StreamProcessor* processor) {
 
 void FSPEnableTriggerFlags(StreamProcessor* processor, unsigned int flags) {
   processor->set_trigger_flags = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG LPPEnableTriggerFlags: %u\n", flags);
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %u\n", flags);
 }
 
 void FSPEnableEventFlags(StreamProcessor* processor, unsigned int flags) {
   processor->set_event_flags = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG LPPEnableEventFlags: %u\n", flags);
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %u\n", flags);
 }
 
 StreamProcessor* FSPCreate(void) {
@@ -120,12 +120,12 @@ int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
                                 : processor->pre_trigger_window;
   processor->buffer = FSPBufferCreate(buffer_depth, buffer_window);
   if (!processor->buffer) {
-    if (processor->loglevel) fprintf(stderr, "ERROR LPPSetBufferSize: Couldn't allocate LPPBuffer.\n");
+    if (processor->loglevel) fprintf(stderr, "ERROR FSPSetBufferSize: Couldn't allocate FSPBuffer.\n");
 
     return 0;
   }
     if (processor->loglevel >=2) {
-        fprintf(stderr, "DEBUG LPPSetBufferSize to depth %d and window %ld.%09ld\n", processor->buffer->max_states, processor->buffer->buffer_window.seconds, processor->buffer->buffer_window.nanoseconds);
+        fprintf(stderr, "DEBUG FSPSetBufferSize to depth %d and window %ld.%09ld\n", processor->buffer->max_states, processor->buffer->buffer_window.seconds, processor->buffer->buffer_window.nanoseconds);
     }
   return buffer_depth;
 }
@@ -144,7 +144,7 @@ int FSPFlush(StreamProcessor* processor) {
   return FSPBufferFlush(processor->buffer);
 }
 
-int LPPFreeStates(StreamProcessor* processor) {
+int FSPFreeStates(StreamProcessor* processor) {
   if (!processor) return 0;
 
   return processor->buffer->max_states - processor->buffer->fill_level;
@@ -173,7 +173,7 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
 
   FSPState* fsp_state;
   FCIOState* state;
-  int nfree = LPPFreeStates(processor);
+  int nfree = FSPFreeStates(processor);
 
   while (!(fsp_state = FSPOutput(processor))) {
     /* this should handle the timeout, so we don't have to do it in the postprocessor.
@@ -196,7 +196,7 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
         return NULL;
       }
     } else {
-      // int n_free_buffer_states = LPPInput(processor, state); // got a valid state, process and hope that we get a new
+      // int n_free_buffer_states = FSPInput(processor, state); // got a valid state, process and hope that we get a new
       // fsp_state
       nfree = FSPInput(processor,
                        state);  // got a valid state, process and hope that we get a new fsp_state on the next loop
