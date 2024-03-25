@@ -24,7 +24,8 @@ fsp_sources = files(
   'src/fsp_l200.c',
   'src/fsp_processor.c',
   'src/fsp_stats.c',
-  'src/fsp_timestamps.c'
+  'src/fsp_timestamps.c',
+  'src/fsp.c',
 )
 
 fsp_lib = library('fsp',
@@ -36,7 +37,8 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
-install_headers('src/fsp.h',
+install_headers(
+  'src/fsp.h',
   'src/fsp_processor.h',
   'src/fsp_dsp.h',
   'src/fsp_state.h',

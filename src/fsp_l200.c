@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int digital_pulser_channel,
                         int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,

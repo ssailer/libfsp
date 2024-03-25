@@ -1,4 +1,6 @@
-#include <fsp_stats.h>
+#include "fsp_stats.h"
+
+#include <stdio.h>
 
 #include <fsp_processor.h>
 #include <time_utils.h>
