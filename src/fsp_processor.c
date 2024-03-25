@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time_utils.h>
 #include <fsp_channelmaps.h>
 
 /* taken from falcon-daq*/
@@ -706,9 +707,13 @@ StreamProcessor* FSPCreate(void) {
   return processor;
 }
 
-void FSPSetLogLevel(StreamProcessor* processor, int loglevel) { processor->loglevel = loglevel; }
+void FSPSetLogLevel(StreamProcessor* processor, int loglevel) {
+  processor->loglevel = loglevel;
+}
 
-void FSPSetLogTime(StreamProcessor* processor, double log_time) { processor->stats->log_time = log_time; }
+void FSPSetLogTime(StreamProcessor* processor, double log_time) {
+  processor->stats->log_time = log_time;
+}
 
 int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
   if (processor->buffer) {

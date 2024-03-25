@@ -9,7 +9,6 @@
 #include <fsp_timestamps.h>
 #include <fsp_stats.h>
 
-#include <time_utils.h>
 #include <fcio.h>
 
 typedef struct StreamProcessor {
