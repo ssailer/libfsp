@@ -37,14 +37,16 @@ static inline const char* channelmap_fmt2str(FSPChannelFormat format)
 
 static inline FSPChannelFormat channelmap_str2fmt(const char* str)
 {
+  FSPChannelFormat ret = FSPChannelFormatUnkown;
   if (strncmp(str, "fcio-trace-idx", 14) == 0)
-    return FCIO_TRACE_INDEX_FORMAT;
+    ret = FCIO_TRACE_INDEX_FORMAT;
   else if (strncmp(str, "fcio-trace-map", 14) == 0)
-    return FCIO_TRACE_MAP_FORMAT;
+    ret = FCIO_TRACE_MAP_FORMAT;
   else if (strncmp(str, "l200-rawid", 10) == 0)
-    return L200_RAWID_FORMAT;
+    ret = L200_RAWID_FORMAT;
   else
-    return FSPChannelFormatUnkown;
+    ret = FSPChannelFormatUnkown;
+  return ret;
 }
 
 static inline unsigned int rawid2tracemap(int input) {
@@ -92,7 +94,7 @@ static inline int convert2traceidx(int ninput, int *input, FSPChannelFormat form
   */
   switch (format) {
     // fcio-tracemap
-    case FCIO_TRACE_INDEX_FORMAT: {
+    case FCIO_TRACE_MAP_FORMAT: {
       for (int i = 0; i < ninput; i++) {
         unsigned int to_convert = input[i];
         int found = 0;
@@ -123,6 +125,8 @@ static inline int convert2traceidx(int ninput, int *input, FSPChannelFormat form
       }
       break;
     }
+    case FCIO_TRACE_INDEX_FORMAT:
+      return 1;
 
     default:
       return 0;

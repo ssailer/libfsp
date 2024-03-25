@@ -5,32 +5,35 @@
 #include <fsp_timestamps.h>
 #include <fsp_dsp.h>
 
-#define ST_NSTATES 6
+#define ST_NSTATES 5
 typedef enum SoftwareTriggerFlags {
 
   ST_NULL = 0,
-  ST_TRIGGER_FORCE = 1 << 0,
-  ST_WPS_THRESHOLD = 1 << 1,
-  ST_WPS_RELTRIGGER = 1 << 2,
-  ST_WPS_PRESCALED = 1 << 3,
-  ST_HWM_PRESCALED = 1 << 4,
+  ST_HWM_TRIGGER = 1 << 0,
+  ST_HWM_PRESCALED = 1 << 1,
+  ST_WPS_ABS_TRIGGER = 1 << 2,
+  ST_WPS_REL_TRIGGER = 1 << 3,
+  ST_WPS_PRESCALED = 1 << 4,
+  ST_DF_TRIGGER = 1 << 5,
 
 } SoftwareTriggerFlags;
 
-#define EVT_NSTATES 11
+#define EVT_NSTATES 12
 typedef enum EventFlags {
 
   EVT_NULL = 0,
-  EVT_AUX_PULSER = 1 << 0,
-  EVT_AUX_BASELINE = 1 << 1,
-  EVT_AUX_MUON = 1 << 2,
-  EVT_RETRIGGER = 1 << 3,
-  EVT_EXTENDED = 1 << 4,
-  EVT_FPGA_MULTIPLICITY = 1 << 5,
-  EVT_ASUM_MIN_NPE = 1 << 6,
-  EVT_FORCE_PRE_WINDOW = 1 << 7,
-  EVT_FORCE_POST_WINDOW = 1 << 8,
-  EVT_FPGA_MULTIPLICITY_ENERGY_BELOW = 1 << 9,
+  EVT_RETRIGGER = 1 << 0,
+  EVT_EXTENDED = 1 << 1,
+  EVT_HWM_MULT_THRESHOLD = 1 << 2,
+  EVT_HWM_MULT_ENERGY_BELOW = 1 << 3,
+  EVT_WPS_ABS_THRESHOLD = 1 << 4,
+  EVT_WPS_REL_THRESHOLD = 1 << 5,
+  EVT_WPS_REL_REFERENCE = 1 << 6,
+  EVT_WPS_REL_PRE_WINDOW = 1 << 7,
+  EVT_WPS_REL_POST_WINDOW = 1 << 8,
+  EVT_DF_PULSER = 1 << 9,
+  EVT_DF_BASELINE = 1 << 10,
+  EVT_DF_MUON = 1 << 11,
 
 } EventFlags;
 

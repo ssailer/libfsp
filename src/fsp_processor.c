@@ -108,7 +108,7 @@ static inline FSPFlags fsp_evt_flags(StreamProcessor* processor, FSPFlags flags,
     if ((trace_larger = fsp_dsp_trace_larger_than(
              state->event->trace[processor->aux.pulser_trace_index], 0, nsamples, nsamples,
              processor->aux.pulser_adc_threshold + state->event->theader[processor->aux.pulser_trace_index][0]))) {
-      flags.event |= EVT_AUX_PULSER;
+      flags.event |= EVT_DF_PULSER;
       if (processor->loglevel >= 4)
         fprintf(stderr, "DEBUG fsp_evt_flags: pulser now=%ld.%09ld %u adc\n", now_ts.seconds, now_ts.nanoseconds,
                 trace_larger);
@@ -119,7 +119,7 @@ static inline FSPFlags fsp_evt_flags(StreamProcessor* processor, FSPFlags flags,
     if ((trace_larger = fsp_dsp_trace_larger_than(
              state->event->trace[processor->aux.baseline_trace_index], 0, nsamples, nsamples,
              processor->aux.baseline_adc_threshold + state->event->theader[processor->aux.baseline_trace_index][0]))) {
-      flags.event |= EVT_AUX_BASELINE;
+      flags.event |= EVT_DF_BASELINE;
       if (processor->loglevel >= 4)
         fprintf(stderr, "DEBUG fsp_evt_flags: baseline now=%ld.%09ld %u adc\n", now_ts.seconds, now_ts.nanoseconds,
                 trace_larger);
@@ -130,7 +130,7 @@ static inline FSPFlags fsp_evt_flags(StreamProcessor* processor, FSPFlags flags,
     if ((trace_larger = fsp_dsp_trace_larger_than(
              state->event->trace[processor->aux.muon_trace_index], 0, nsamples, nsamples,
              processor->aux.muon_adc_threshold + state->event->theader[processor->aux.muon_trace_index][0]))) {
-      flags.event |= EVT_AUX_MUON;
+      flags.event |= EVT_DF_MUON;
       if (processor->loglevel >= 4)
         fprintf(stderr, "DEBUG fsp_evt_flags: muon now=%ld.%09ld %u adc\n", now_ts.seconds, now_ts.nanoseconds,
                 trace_larger);
@@ -174,7 +174,7 @@ static inline FSPFlags fsp_evt_flags(StreamProcessor* processor, FSPFlags flags,
   return flags;
 }
 
-static inline FSPFlags fsp_st_majority(StreamProcessor* processor, FSPFlags flags, FCIOState* state) {
+static inline FSPFlags fsp_st_hardware_majority(StreamProcessor* processor, FSPFlags flags, FCIOState* state) {
   fcio_config* config = state->config;
   fcio_event* event = state->event;
 
@@ -182,22 +182,24 @@ static inline FSPFlags fsp_st_majority(StreamProcessor* processor, FSPFlags flag
 
   /* don't set to higher than 1 if you are sane */
   if (processor->hwm_cfg->multiplicity >= processor->majority_threshold) {
-    flags.event |= EVT_FPGA_MULTIPLICITY;
+    flags.event |= EVT_HWM_MULT_THRESHOLD;
 
     /* if majority is >= 1, then the following check is safe, otherwise think about what happens when majority == 0
        if there is any channel with a majority above the threshold, it's a force trigger, if not, it should be
        prescaled and not affect the rest of the datastream.
     */
     if (processor->hwm_cfg->n_below_min_value == processor->hwm_cfg->multiplicity)
-      flags.event |= EVT_FPGA_MULTIPLICITY_ENERGY_BELOW;
-    else
-      flags.trigger |= ST_TRIGGER_FORCE;
+      flags.event |= EVT_HWM_MULT_ENERGY_BELOW;
+    else {
+      flags.trigger |= ST_HWM_TRIGGER;
+      flags.event |= EVT_WPS_REL_REFERENCE;
+    }
   }
 
   return flags;
 }
 
-static inline FSPFlags fsp_st_analogue_sum(StreamProcessor* processor, FSPFlags flags, FCIOState* state) {
+static inline FSPFlags fsp_st_windowed_peak_sum(StreamProcessor* processor, FSPFlags flags, FCIOState* state) {
   fcio_config* config = state->config;
   fcio_event* event = state->event;
 
@@ -253,16 +255,17 @@ static inline FSPFlags fsp_st_analogue_sum(StreamProcessor* processor, FSPFlags 
 
   }
 
-  if (processor->wps_cfg->max_peak_sum >= processor->sum_threshold_pe) {
-    flags.trigger |= ST_WPS_THRESHOLD;
+  if (processor->wps_cfg->max_peak_sum >= processor->absolute_sum_threshold_pe) {
+    flags.event |= EVT_WPS_ABS_THRESHOLD;
+    flags.trigger |= ST_WPS_ABS_TRIGGER;
   }
 
-  if (processor->wps_cfg->max_peak_sum >= processor->windowed_sum_threshold_pe) {
-    flags.event |= EVT_ASUM_MIN_NPE;
+  if (processor->wps_cfg->max_peak_sum >= processor->relative_sum_threshold_pe) {
+    flags.event |= EVT_WPS_REL_THRESHOLD;
   }
 
-  if (processor->muon_coincidence && flags.event & EVT_AUX_MUON) {
-    flags.trigger |= ST_TRIGGER_FORCE;
+  if (processor->muon_coincidence && flags.event & EVT_DF_MUON) {
+    flags.trigger |= ST_HWM_TRIGGER;
   }
 
   return flags;
@@ -290,8 +293,8 @@ static inline FSPFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fl
   */
 
   /* ge prescaling */
-  if (processor->ge_prescaling_rate > 0.0 && (flags.event & EVT_FPGA_MULTIPLICITY_ENERGY_BELOW) &&
-      ((flags.trigger & ST_TRIGGER_FORCE) == 0)) {
+  if (processor->ge_prescaling_rate > 0.0 && (flags.event & EVT_HWM_MULT_ENERGY_BELOW) &&
+      ((flags.trigger & ST_HWM_TRIGGER) == 0)) {
     if (processor->ge_prescaling_timestamp.seconds == -1) {
       /* initialize with the first event in the stream.*/
       processor->ge_prescaling_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
@@ -389,14 +392,14 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       flags = fsp_evt_flags(processor, flags, state);
 
       if (hwm_cfg) {
-        flags = fsp_st_majority(processor, flags, state);
+        flags = fsp_st_hardware_majority(processor, flags, state);
         fsp_state->hwm_multiplicity = hwm_cfg->multiplicity;
         fsp_state->hwm_max_value = hwm_cfg->max_value;
         fsp_state->hwm_min_value = hwm_cfg->min_value;
       }
 
       if (wps_cfg) {
-        flags = fsp_st_analogue_sum(processor, flags, state);
+        flags = fsp_st_windowed_peak_sum(processor, flags, state);
         fsp_state->wps_max_value = wps_cfg->max_peak_sum;
         fsp_state->wps_max_sample = wps_cfg->max_peak_sum_at;
         fsp_state->wps_max_single_peak_value = wps_cfg->max_peak;
@@ -426,7 +429,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
         if (processor->aux.pulser_trace_index > 0) {
           if (!convert2traceidx(1, &processor->aux.pulser_trace_index, processor->aux.tracemap_format,
                                  state->config->tracemap)) {
-            fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux pulser channel could not be mapped.\n");
+            fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux pulser channel could not be mapped %d.\n", processor->aux.pulser_trace_index);
             return -1;
           }
           if (processor->loglevel >= 4) {
@@ -436,7 +439,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
         if (processor->aux.baseline_trace_index > 0) {
           if (!convert2traceidx(1, &processor->aux.baseline_trace_index, processor->aux.tracemap_format,
                                  state->config->tracemap)) {
-            fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux baseline channel could not be mapped.\n");
+            fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux baseline channel could not be mapped %d.\n", processor->aux.baseline_trace_index);
             return -1;
           }
           if (processor->loglevel >= 4) {
@@ -446,7 +449,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
         if (processor->aux.muon_trace_index > 0) {
           if (!convert2traceidx(1, &processor->aux.muon_trace_index, processor->aux.tracemap_format,
                                  state->config->tracemap)) {
-            fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux muon channel could not be mapped.\n");
+            fprintf(stderr, "CRITICAL fsp_process_fcio_state: aux muon channel could not be mapped %d.\n", processor->aux.muon_trace_index);
             return -1;
           }
           if (processor->loglevel >= 4) {
@@ -559,15 +562,23 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
 
   if (timestamp_geq(processor->post_trigger_timestamp, fsp_state->timestamp)) {
-    fsp_state->flags.event |= EVT_FORCE_POST_WINDOW;
+    /*
+      state timestamp is within the post trigger timestamp
+    */
+    fsp_state->flags.event |= EVT_WPS_REL_POST_WINDOW;
 
-    if (fsp_state->flags.event & EVT_ASUM_MIN_NPE) {
-      fsp_state->flags.trigger |= ST_WPS_RELTRIGGER;
+    /*
+      state peak sum value above relative trigger threshold
+    */
+    if (fsp_state->flags.event & EVT_WPS_REL_THRESHOLD) {
+      fsp_state->flags.trigger |= ST_WPS_REL_TRIGGER;
     }
   }
 
-  if (fsp_state->flags.trigger & ST_TRIGGER_FORCE) {
-    /* current state is germanium trigger, keep it and start checking all previous and future states against
+  // if (fsp_state->flags.trigger & ST_HWM_TRIGGER) {
+  if (fsp_state->flags.event & EVT_WPS_REL_REFERENCE) {
+    /* current state is hardware majority trigger,
+      keep it and start checking all previous and future states against
       the trigger windows.
     */
     processor->force_trigger_timestamp = fsp_state->timestamp;
@@ -582,9 +593,9 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
     {
       if (!update_fsp_state->contains_timestamp)
         continue;
-      update_fsp_state->flags.event |= EVT_FORCE_PRE_WINDOW;
-      if (update_fsp_state->flags.event & EVT_ASUM_MIN_NPE) {
-        update_fsp_state->flags.trigger |= ST_WPS_RELTRIGGER;
+      update_fsp_state->flags.event |= EVT_WPS_REL_PRE_WINDOW;
+      if (update_fsp_state->flags.event & EVT_WPS_REL_THRESHOLD) {
+        update_fsp_state->flags.trigger |= ST_WPS_REL_TRIGGER;
       }
     }
   }
@@ -700,8 +711,8 @@ StreamProcessor* FSPCreate(void) {
   processor->aux.muon_trace_index = -1;
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
-  FSPEnableEventFlags(processor, EVT_AUX_PULSER | EVT_AUX_BASELINE | EVT_EXTENDED | EVT_RETRIGGER);
-  FSPEnableTriggerFlags(processor, ST_TRIGGER_FORCE | ST_WPS_RELTRIGGER | ST_WPS_THRESHOLD |
+  FSPEnableEventFlags(processor, EVT_DF_PULSER | EVT_DF_BASELINE | EVT_EXTENDED | EVT_RETRIGGER);
+  FSPEnableTriggerFlags(processor, ST_HWM_TRIGGER | ST_WPS_REL_TRIGGER | ST_WPS_ABS_TRIGGER |
                                        ST_WPS_PRESCALED | ST_HWM_PRESCALED);
 
   return processor;

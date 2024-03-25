@@ -28,8 +28,8 @@ typedef struct StreamProcessor {
   Timestamp post_trigger_timestamp;
   Timestamp pre_trigger_timestamp;
 
-  float windowed_sum_threshold_pe;
-  float sum_threshold_pe;
+  float relative_sum_threshold_pe;
+  float absolute_sum_threshold_pe;
   int majority_threshold;
   int muon_coincidence;
 

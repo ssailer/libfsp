@@ -6,8 +6,7 @@
 int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int digital_pulser_channel,
                         int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,
                         int digital_muon_channel, int muon_level_adc) {
-  if (is_known_channelmap_format(format)) {
-    processor->aux.tracemap_format = format;
+  if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
               "ERROR LPPSetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
@@ -15,6 +14,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
               channelmap_fmt2str(format));
     return 0;
   }
+  processor->aux.tracemap_format = format;
 
   processor->aux.pulser_trace_index = digital_pulser_channel;
   processor->aux.pulser_adc_threshold = pulser_level_adc;
@@ -51,8 +51,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   processor->hwm_cfg = calloc(1, sizeof(HardwareMajorityConfig));
   HardwareMajorityConfig* fmc = processor->hwm_cfg;
 
-  if (is_known_channelmap_format(format)) {
-    fmc->tracemap_format = format;
+  if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
               "ERROR LPPSetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
@@ -61,6 +60,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
     free(fmc);
     return 0;
   }
+  fmc->tracemap_format = format;
   fmc->ntraces = nchannels;
 
   for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++) {
@@ -107,8 +107,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   processor->wps_cfg = calloc(1, sizeof(WindowedPeakSumConfig));
   WindowedPeakSumConfig* asc = processor->wps_cfg;
 
-  if (is_known_channelmap_format(format)) {
-    asc->tracemap_format = format;
+  if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
               "CRITICAL LPPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
@@ -117,16 +116,17 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
     free(asc);
     return 0;
   }
+  asc->tracemap_format = format;
 
   if (coincidence_sum_threshold_pe >= 0)
-    processor->windowed_sum_threshold_pe = coincidence_sum_threshold_pe;
+    processor->relative_sum_threshold_pe = coincidence_sum_threshold_pe;
   else {
     fprintf(stderr, "CRICITAL coincidence_sum_threshold_pe needs to be >= 0 is %f\n", coincidence_sum_threshold_pe);
     return 0;
   }
 
   if (sum_threshold_pe >= 0)
-    processor->sum_threshold_pe = sum_threshold_pe;
+    processor->absolute_sum_threshold_pe = sum_threshold_pe;
   else {
     fprintf(stderr, "CRICITAL sum_threshold_pe needs to be >= 0 is %f\n", sum_threshold_pe);
     return 0;
@@ -208,8 +208,8 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
     fprintf(stderr, "DEBUG coincidence_pre_window_ns    %ld\n", processor->pre_trigger_window.nanoseconds);
     fprintf(stderr, "DEBUG coincidence_post_window_ns   %ld\n", processor->post_trigger_window.nanoseconds);
     fprintf(stderr, "DEBUG coincidence_window_samples   %d\n", asc->coincidence_window);
-    fprintf(stderr, "DEBUG coincidence_sum_threshold_pe %f\n", processor->windowed_sum_threshold_pe);
-    fprintf(stderr, "DEBUG sum_threshold_pe             %f\n", processor->sum_threshold_pe);
+    fprintf(stderr, "DEBUG coincidence_sum_threshold_pe %f\n", processor->relative_sum_threshold_pe);
+    fprintf(stderr, "DEBUG sum_threshold_pe             %f\n", processor->absolute_sum_threshold_pe);
     fprintf(stderr, "DEBUG enable_muon_coincidence      %d\n", processor->muon_coincidence);
 
     for (int i = 0; i < asc->ntraces; i++) {
@@ -230,68 +230,74 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   return 1;
 }
 
-static inline void event_flag_2char(char* string, size_t strlen, unsigned int event_flags) {
-  assert(strlen >= 9);
+static inline size_t event_flag_2char(char* string, size_t strlen, unsigned int event_flags) {
+  assert(strlen >= EVT_NSTATES);
 
-  for (size_t i = 0; i < strlen; i++) string[i] = '_';
+  for (size_t i = 0; i < EVT_NSTATES; i++) string[i] = '_';
 
-  if (event_flags & EVT_AUX_PULSER) string[0] = 'P';
-  if (event_flags & EVT_AUX_BASELINE) string[1] = 'B';
-  if (event_flags & EVT_AUX_MUON) string[2] = 'M';
+  if (event_flags & EVT_DF_PULSER) string[0] = 'P';
+  if (event_flags & EVT_DF_BASELINE) string[1] = 'B';
+  if (event_flags & EVT_DF_MUON) string[2] = 'M';
   if (event_flags & EVT_RETRIGGER) string[3] = 'R';
   if (event_flags & EVT_EXTENDED) string[3] = 'E';
 
-  if (event_flags & EVT_FPGA_MULTIPLICITY) string[4] = 'M';
-  if (event_flags & EVT_FPGA_MULTIPLICITY_ENERGY_BELOW) string[5] = 'L';
-  if (event_flags & EVT_FORCE_POST_WINDOW) string[6] = '<';
-  if (event_flags & EVT_ASUM_MIN_NPE) string[7] = '-';
-  if (event_flags & EVT_FORCE_PRE_WINDOW) string[8] = '>';
-  // string[4] = '\0';
+  if (event_flags & EVT_HWM_MULT_THRESHOLD) string[4] = 'M';
+  if (event_flags & EVT_HWM_MULT_ENERGY_BELOW) string[5] = 'L';
+  if (event_flags & EVT_WPS_REL_REFERENCE) string[6] = '!';
+  if (event_flags & EVT_WPS_REL_POST_WINDOW) string[7] = '<';
+  if (event_flags & EVT_WPS_REL_THRESHOLD) string[8] = '-';
+  if (event_flags & EVT_WPS_REL_PRE_WINDOW) string[9] = '>';
+  // string[10] = '\0';
+  return 10;
 }
 
-static inline void st_flag_2char(char* string, size_t strlen, unsigned int st_flags) {
-  assert(strlen >= 5);
+static inline size_t st_flag_2char(char* string, size_t strlen, unsigned int st_flags) {
+  assert(strlen >= ST_NSTATES);
 
-  if (st_flags & ST_TRIGGER_FORCE) string[0] = 'F';
-  if (st_flags & ST_WPS_RELTRIGGER) string[1] = 'C';
-  if (st_flags & ST_WPS_THRESHOLD) string[2] = 'N';
-  if (st_flags & ST_WPS_PRESCALED) string[3] = 'S';
-  if (st_flags & ST_HWM_PRESCALED) string[4] = 'G';
+  for (size_t i = 0; i < ST_NSTATES; i++) string[i] = '_';
+
+  if (st_flags & ST_HWM_TRIGGER) string[0] = 'M';
+  if (st_flags & ST_HWM_PRESCALED) string[1] = 'G';
+  if (st_flags & ST_WPS_ABS_TRIGGER) string[2] = 'P';
+  if (st_flags & ST_WPS_REL_TRIGGER) string[3] = 'C';
+  if (st_flags & ST_WPS_PRESCALED) string[4] = 'S';
 
   // string[10] = '\0';
+  return 5;
 }
 
 void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
-  assert(strlen >= 18);
+  assert(strlen >= ST_NSTATES + EVT_NSTATES + 4);
 
-  for (size_t i = 0; i < strlen; i++) cstring[i] = '_';
-
-  cstring[0] = fsp_state->write ? 'W' : 'D';
+  for (size_t i = 0; i < ST_NSTATES + EVT_NSTATES + 4; i++) cstring[i] = '_';
+  size_t curr_offset = 0;
+  cstring[curr_offset++] = fsp_state->write ? 'W' : 'D';
 
   switch (fsp_state->stream_tag) {
     case FCIOConfig:
-      cstring[1] = 'C';
+      cstring[curr_offset++] = 'C';
       break;
     case FCIOStatus:
-      cstring[1] = 'S';
+      cstring[curr_offset++] = 'S';
       break;
     case FCIOEvent:
-      cstring[1] = 'E';
+      cstring[curr_offset++] = 'E';
       break;
     case FCIOSparseEvent:
-      cstring[1] = 'Z';
+      cstring[curr_offset++] = 'Z';
       break;
     case FCIORecEvent:
-      cstring[1] = 'R';
+      cstring[curr_offset++] = 'R';
       break;
     default:
-      cstring[1] = '?';
+      cstring[curr_offset++] = '?';
       break;
   }
-  cstring[2] = '.';
+  cstring[curr_offset++] = '.';
 
-  st_flag_2char(&cstring[3], 5, fsp_state->flags.trigger);
-  cstring[8] = '.';
+  curr_offset += st_flag_2char(&cstring[curr_offset], ST_NSTATES, fsp_state->flags.trigger);
+  cstring[curr_offset++] = '.';
 
-  event_flag_2char(&cstring[9], 9, fsp_state->flags.event);
+  curr_offset += event_flag_2char(&cstring[curr_offset], EVT_NSTATES, fsp_state->flags.event);
+  cstring[curr_offset] = '\0';
 }
