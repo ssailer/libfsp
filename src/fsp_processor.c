@@ -711,9 +711,8 @@ StreamProcessor* FSPCreate(void) {
   processor->aux.muon_trace_index = -1;
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
-  FSPEnableEventFlags(processor, EVT_DF_PULSER | EVT_DF_BASELINE | EVT_EXTENDED | EVT_RETRIGGER);
-  FSPEnableTriggerFlags(processor, ST_HWM_TRIGGER | ST_WPS_REL_TRIGGER | ST_WPS_ABS_TRIGGER |
-                                       ST_WPS_PRESCALED | ST_HWM_PRESCALED);
+  FSPEnableEventFlags(processor, EVT_EXTENDED | EVT_RETRIGGER | EVT_DF_PULSER | EVT_DF_BASELINE);
+  FSPEnableTriggerFlags(processor, ST_HWM_TRIGGER | ST_HWM_PRESCALED | ST_WPS_ABS_TRIGGER | ST_WPS_REL_TRIGGER | ST_WPS_PRESCALED);
 
   return processor;
 }
