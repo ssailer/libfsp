@@ -60,7 +60,7 @@ typedef struct FSPState {
   int wps_max_offset;  // when is the total sum offset reached?
   int wps_max_multiplicity;  // How many channels did have a peak above thresholds
   float wps_max_single_peak_value;   // which one was the largest individual peak
-  float wps_max_single_peak_offset;  // which sample contains this peak
+  int wps_max_single_peak_offset;  // which sample contains this peak
 
   /* sub triggerlist */
   WPSTriggerList* wps_trigger_list;

@@ -257,12 +257,12 @@ static inline FSPFlags fsp_st_windowed_peak_sum(StreamProcessor* processor, FSPF
 
   }
 
-  if (processor->wps_cfg->max_peak_sum >= processor->absolute_sum_threshold_pe) {
+  if (processor->wps_cfg->max_peak_sum_value >= processor->absolute_sum_threshold_pe) {
     flags.event |= EVT_WPS_ABS_THRESHOLD;
     flags.trigger |= ST_WPS_ABS_TRIGGER;
   }
 
-  if (processor->wps_cfg->max_peak_sum >= processor->relative_sum_threshold_pe) {
+  if (processor->wps_cfg->max_peak_sum_value >= processor->relative_sum_threshold_pe) {
     flags.event |= EVT_WPS_REL_THRESHOLD;
   }
 
@@ -402,10 +402,11 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
       if (wps_cfg) {
         flags = fsp_st_windowed_peak_sum(processor, flags, state);
-        fsp_state->wps_max_value = wps_cfg->max_peak_sum;
-        fsp_state->wps_max_offset = wps_cfg->max_peak_sum_at;
-        fsp_state->wps_max_single_peak_value = wps_cfg->max_peak;
-        fsp_state->wps_max_multiplicity = wps_cfg->multiplicity;
+        fsp_state->wps_max_value = wps_cfg->max_peak_sum_value;
+        fsp_state->wps_max_offset = wps_cfg->max_peak_sum_offset;
+        fsp_state->wps_max_single_peak_value = wps_cfg->max_peak_value;
+        fsp_state->wps_max_single_peak_offset = wps_cfg->max_peak_offset;
+        fsp_state->wps_max_multiplicity = wps_cfg->max_peak_sum_multiplicity;
       }
 
       flags = fsp_st_prescaling(processor, flags, fsp_state->unixstamp);

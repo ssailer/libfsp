@@ -47,10 +47,11 @@ typedef struct WindowedPeakSumConfig {
   int work_trace_i32[FCIOMaxSamples * 3];
   int work_trace2_i32[FCIOMaxSamples * 3];
 
-  float max_peak_sum;
-  int max_peak_sum_at;
-  float max_peak;
-  int multiplicity;
+  float max_peak_sum_value;
+  int max_peak_sum_offset;
+  float max_peak_value;
+  int max_peak_offset;
+  int max_peak_sum_multiplicity;
 
 
   float *peak_times;
@@ -88,7 +89,7 @@ float fsp_dsp_diff_and_find_peaks(float *input_trace, float *diff_trace, float *
 void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int shaping_width_samples,
                               unsigned short *input_trace, float *diff_trace, float *peak_trace, float *work_trace,
                               float *work_trace2, float gain, int apply_gain_scaling, float threshold, float lowpass,
-                              float *peak_times, float *peak_amplitudes, int *npeaks, float *largest_peak);
+                              float *peak_times, float *peak_amplitudes, int *npeaks, float *largest_peak, int* largest_peak_offset);
 int fsp_dsp_diff_and_smooth_pre_samples(unsigned int shaping_width_samples, float lowpass);
 int fsp_dsp_diff_and_smooth_post_samples(unsigned int shaping_width_samples, float lowpass);
 

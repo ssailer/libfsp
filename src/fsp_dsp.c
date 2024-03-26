@@ -239,7 +239,7 @@ float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincide
 
 float fsp_dsp_local_peaks_f32(float *input_trace, float *peak_trace, int start, int stop, int nsamples,
                                const float gain_adc, const float threshold_pe, float *peak_times,
-                               float *peak_amplitudes, int *npeaks) {
+                               float *peak_amplitudes, int *npeaks, int* largest_peak_offset) {
   assert(start >= 0);
   assert(stop <= nsamples);
   if (!peak_times || !peak_amplitudes | !npeaks) {
@@ -255,7 +255,8 @@ float fsp_dsp_local_peaks_f32(float *input_trace, float *peak_trace, int start, 
   float last_max = 0;
   float last_min = 0;
   float current_sample = 0;
-  float largest_peak = 0;
+  float largest_peak = 0.0;
+  int largest_peak_sample = -1;
   int last_max_index = 0;
   for (int i = start + 1; i < stop; i++) {
     current_sample = input_trace[i];
@@ -270,7 +271,10 @@ float fsp_dsp_local_peaks_f32(float *input_trace, float *peak_trace, int start, 
         if (last_max > threshold_pe * gain_adc) {
           float last_max_pe = last_max / gain_adc;
           peak_trace[i] += last_max_pe;
-          if (last_max_pe > largest_peak) largest_peak = last_max_pe;
+          if (last_max_pe > largest_peak) {
+            largest_peak = last_max_pe;
+            largest_peak_sample = last_max_index;
+          }
           if (npeaks) {
             peak_times[*npeaks] = last_max_index;
             peak_amplitudes[*npeaks] = last_max / gain_adc;
@@ -287,6 +291,9 @@ float fsp_dsp_local_peaks_f32(float *input_trace, float *peak_trace, int start, 
       }
     }
   }
+
+  if (largest_peak_offset)
+    *largest_peak_offset = largest_peak_sample;
 
   return largest_peak;
 }
@@ -350,7 +357,7 @@ void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int s
                               unsigned short *input_trace, float *diff_trace, float *peak_trace, float *work_trace,
                               float *work_trace2, float gain_adc, int apply_gain_scaling, float threshold_pe,
                               float lowpass, float *peak_times, float *peak_amplitudes, int *npeaks,
-                              float *largest_peak) {
+                              float *largest_peak, int* largest_peak_offset) {
   assert(start);
   assert(stop);
   assert(gain_adc > 0.0);
@@ -377,10 +384,16 @@ void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int s
   *start += offset;
   *stop -= offset;
 
+  int _largest_peak_offset = -1;
   float _largest_peak = fsp_dsp_local_peaks_f32(work_trace, peak_trace, *start, *stop, nsamples, gain_adc,
-                                                 threshold_pe, peak_times, peak_amplitudes, npeaks);
+                                                 threshold_pe, peak_times, peak_amplitudes, npeaks, &_largest_peak_offset);
 
-  if (largest_peak) *largest_peak = _largest_peak;
+  if (largest_peak) {
+    *largest_peak = _largest_peak;
+  }
+  if (largest_peak_offset) {
+    *largest_peak_offset = _largest_peak_offset;
+  }
 }
 
 void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntraces, unsigned short **traces) {
@@ -401,6 +414,7 @@ void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntr
 
   int multiplicity = 0;
   float total_largest_peak = 0;
+  int total_largest_peak_offset = -1;
   for (int i = 0; i < cfg->ntraces; i++) {
     assert(nsamples + (4 * (cfg->shaping_widths[i] + 1) <= 3 * FCIOMaxSamples));
 
@@ -422,31 +436,35 @@ void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntr
       pulse_times = &cfg->peak_times[*(cfg->total_pulses)];
       pulse_amplitudes = &cfg->peak_amplitudes[*(cfg->total_pulses)];
     }
-    float largest_peak;
+    float largest_peak = 0.0;
+    int largest_peak_offset = -1;
     /* TODO pre-calculate from sum cfg */
     int start = cfg->dsp_start_sample[i];
     int stop = cfg->dsp_stop_sample[i];
 
     fsp_dsp_diff_and_smooth(nsamples, &start, &stop, shaping_width_samples, trace, cfg->diff_trace, cfg->peak_trace,
                              cfg->work_trace, cfg->work_trace2, gain, cfg->apply_gain_scaling, threshold, lowpass,
-                             pulse_times, pulse_amplitudes, npulses, &largest_peak);
+                             pulse_times, pulse_amplitudes, npulses, &largest_peak, &largest_peak_offset);
 
-    if (largest_peak) {
+    if (largest_peak_offset > 0) {
       multiplicity++;
       if (largest_peak > total_largest_peak) {
         total_largest_peak = largest_peak;
+        total_largest_peak_offset = largest_peak_offset;
       }
     }
+
 
     if (cfg->total_pulses) {
       *(cfg->total_pulses) += *npulses;
     }
   }
 
-  cfg->max_peak_sum = max_windowed_sum(cfg->peak_trace, cfg->sum_window_start_sample, cfg->sum_window_stop_sample,
-                                         nsamples, cfg->coincidence_window, &cfg->max_peak_sum_at, &cfg->trigger_list);
-  cfg->max_peak = total_largest_peak;
-  cfg->multiplicity = multiplicity;
+  cfg->max_peak_sum_value = max_windowed_sum(cfg->peak_trace, cfg->sum_window_start_sample, cfg->sum_window_stop_sample,
+                                         nsamples, cfg->coincidence_window, &cfg->max_peak_sum_offset, &cfg->trigger_list);
+  cfg->max_peak_sum_multiplicity = multiplicity;
+  cfg->max_peak_value = total_largest_peak;
+  cfg->max_peak_offset = total_largest_peak_offset;
 }
 
 void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigned short **trace_headers) {
