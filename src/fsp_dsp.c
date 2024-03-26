@@ -179,7 +179,8 @@ float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincide
   float acc = 0;
   float largest_acc = 0;
 
-  for (int i = start; i < start + coincidence_window && i < stop; i++) acc += x[i];
+  for (int i = start; i < start + coincidence_window && i < stop; i++)
+    acc += x[i];
 
   largest_acc = acc;
   int offset = start;

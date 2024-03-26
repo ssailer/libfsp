@@ -139,8 +139,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   processor->post_trigger_window.nanoseconds = coincidence_post_window_ns % 1000000000L;
   processor->sipm_prescaling_rate = average_prescaling_rate_hz;
   if (processor->sipm_prescaling_rate > 0.0)
-    processor->sipm_prescaling =
-        "average";  // could be "offset" when selecting ->sipm_prescaling_offset, but is disabled here.
+    processor->sipm_prescaling = "average";  // could be "offset" when selecting ->sipm_prescaling_offset, but is disabled here.
   else
     processor->sipm_prescaling = NULL;
   processor->muon_coincidence = enable_muon_coincidence;

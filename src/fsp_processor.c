@@ -403,9 +403,9 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       if (wps_cfg) {
         flags = fsp_st_windowed_peak_sum(processor, flags, state);
         fsp_state->wps_max_value = wps_cfg->max_peak_sum;
-        fsp_state->wps_max_sample = wps_cfg->max_peak_sum_at;
+        fsp_state->wps_max_offset = wps_cfg->max_peak_sum_at;
         fsp_state->wps_max_single_peak_value = wps_cfg->max_peak;
-        fsp_state->wps_multiplicity = wps_cfg->multiplicity;
+        fsp_state->wps_max_multiplicity = wps_cfg->multiplicity;
       }
 
       flags = fsp_st_prescaling(processor, flags, fsp_state->unixstamp);

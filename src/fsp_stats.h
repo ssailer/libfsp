@@ -12,17 +12,17 @@ typedef struct FSPStats {
   int n_written_events;
   int n_discarded_events;
 
-  int current_nread;
-  int current_nwritten;
-  int current_ndiscarded;
+  int dt_n_read_events;
+  int dt_n_written_events;
+  int dt_n_discarded_events;
 
-  double dt_current;
-  double current_read_rate;
-  double current_write_rate;
-  double current_discard_rate;
+  double dt;
+  double dt_rate_read_events;
+  double dt_rate_write_events;
+  double dt_rate_discard_events;
 
-  double avg_read_rate;
-  double avg_write_rate;
-  double avg_discard_rate;
+  double avg_rate_read_events;
+  double avg_rate_write_events;
+  double avg_rate_discard_events;
 
 } FSPStats;

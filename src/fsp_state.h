@@ -51,26 +51,26 @@ typedef struct FSPState {
   Timestamp unixstamp;
   int contains_timestamp;
   int in_buffer;
+  int stream_tag;
 
   /* calculate observables if event */
   FSPFlags flags;
   // Peak Sum
   float wps_max_value; // what is the maximum PE within the integration windows
-  int wps_max_sample;  // when is the total sum offset reached?
-
-  int wps_multiplicity;  // How many channels did have a peak above thresholds
+  int wps_max_offset;  // when is the total sum offset reached?
+  int wps_max_multiplicity;  // How many channels did have a peak above thresholds
   float wps_max_single_peak_value;   // which one was the largest individual peak
+  float wps_max_single_peak_offset;  // which sample contains this peak
+
+  /* sub triggerlist */
+  WPSTriggerList* wps_trigger_list;
 
   // FPGA Majority
   int hwm_multiplicity;          // how many channels have fpga_energy > 0
   unsigned short hwm_max_value;  // what is the largest fpga_energy of those
   unsigned short hwm_min_value;  // what is the smallest fpga_energy of those
 
-  /* sub triggerlist */
-  WPSTriggerList* wps_trigger_list;
-
   /* final write decision */
   int write;
-  int stream_tag;
 
 } FSPState;
