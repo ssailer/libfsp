@@ -183,14 +183,14 @@ static inline FSPFlags fsp_st_hardware_majority(StreamProcessor* processor, FSPF
   fsp_dsp_hardware_majority(processor->hwm_cfg, config->adcs, event->theader);
 
   /* don't set to higher than 1 if you are sane */
-  if (processor->hwm_cfg->multiplicity >= processor->majority_threshold) {
+  if (processor->hwm_cfg->multiplicity >= processor->hwm_threshold) {
     flags.event |= EVT_HWM_MULT_THRESHOLD;
 
     /* if majority is >= 1, then the following check is safe, otherwise think about what happens when majority == 0
        if there is any channel with a majority above the threshold, it's a force trigger, if not, it should be
        prescaled and not affect the rest of the datastream.
     */
-    if (processor->hwm_cfg->n_below_min_value == processor->hwm_cfg->multiplicity)
+    if (processor->hwm_cfg->mult_below_threshold == processor->hwm_cfg->multiplicity)
       flags.event |= EVT_HWM_MULT_ENERGY_BELOW;
     else {
       flags.trigger |= ST_HWM_TRIGGER;
@@ -257,12 +257,12 @@ static inline FSPFlags fsp_st_windowed_peak_sum(StreamProcessor* processor, FSPF
 
   }
 
-  if (processor->wps_cfg->max_peak_sum_value >= processor->absolute_sum_threshold_pe) {
+  if (processor->wps_cfg->max_peak_sum_value >= processor->absolute_wps_threshold) {
     flags.event |= EVT_WPS_ABS_THRESHOLD;
     flags.trigger |= ST_WPS_ABS_TRIGGER;
   }
 
-  if (processor->wps_cfg->max_peak_sum_value >= processor->relative_sum_threshold_pe) {
+  if (processor->wps_cfg->max_peak_sum_value >= processor->relative_wps_threshold) {
     flags.event |= EVT_WPS_REL_THRESHOLD;
   }
 
@@ -540,7 +540,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
         if (hwm_cfg->ntraces <= 0) {
           hwm_cfg->ntraces = state->config->adcs;
-          processor->majority_threshold = 0;  // we pass the event even if there is no fpga_energy; it must be in the stream for a reason.
+          processor->hwm_threshold = 0;  // we pass the event even if there is no fpga_energy; it must be in the stream for a reason.
         }
       }
       fsp_state->contains_timestamp = 0;

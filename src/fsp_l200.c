@@ -70,7 +70,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   }
   fmc->fast = skip_full_counting;
   if (majority_threshold >= 0)
-    processor->majority_threshold = majority_threshold;
+    processor->hwm_threshold = majority_threshold;
   else {
     fprintf(stderr, "CRITICAL majority_threshold needs to be >= 0 is %d\n", majority_threshold);
     return 0;
@@ -103,7 +103,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
                          float* calibration_pe_adc, float* channel_thresholds_pe, int* shaping_width_samples,
                          float* lowpass_factors, int coincidence_pre_window_ns, int coincidence_post_window_ns,
                          int coincidence_window_samples, int sum_window_start_sample, int sum_window_stop_sample,
-                         float sum_threshold_pe, float coincidence_sum_threshold_pe, float average_prescaling_rate_hz,
+                         float sum_threshold_pe, float coincidence_wps_threshold, float average_prescaling_rate_hz,
                          int enable_muon_coincidence) {
   processor->wps_cfg = calloc(1, sizeof(WindowedPeakSumConfig));
   WindowedPeakSumConfig* asc = processor->wps_cfg;
@@ -119,15 +119,15 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   }
   asc->tracemap_format = format;
 
-  if (coincidence_sum_threshold_pe >= 0)
-    processor->relative_sum_threshold_pe = coincidence_sum_threshold_pe;
+  if (coincidence_wps_threshold >= 0)
+    processor->relative_wps_threshold = coincidence_wps_threshold;
   else {
-    fprintf(stderr, "CRICITAL coincidence_sum_threshold_pe needs to be >= 0 is %f\n", coincidence_sum_threshold_pe);
+    fprintf(stderr, "CRICITAL coincidence_wps_threshold needs to be >= 0 is %f\n", coincidence_wps_threshold);
     return 0;
   }
 
   if (sum_threshold_pe >= 0)
-    processor->absolute_sum_threshold_pe = sum_threshold_pe;
+    processor->absolute_wps_threshold = sum_threshold_pe;
   else {
     fprintf(stderr, "CRICITAL sum_threshold_pe needs to be >= 0 is %f\n", sum_threshold_pe);
     return 0;
@@ -150,7 +150,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   asc->sum_window_stop_sample = sum_window_stop_sample;
 
   asc->trigger_list.size = 0;
-  asc->trigger_list.threshold = coincidence_sum_threshold_pe; // use the same threshold as the processor to check for the flag
+  asc->trigger_list.threshold = coincidence_wps_threshold; // use the same threshold as the processor to check for the flag
 
   /* TODO CHECK THIS*/
   asc->apply_gain_scaling = 1;
@@ -208,8 +208,8 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
     fprintf(stderr, "DEBUG coincidence_pre_window_ns    %ld\n", processor->pre_trigger_window.nanoseconds);
     fprintf(stderr, "DEBUG coincidence_post_window_ns   %ld\n", processor->post_trigger_window.nanoseconds);
     fprintf(stderr, "DEBUG coincidence_window_samples   %d\n", asc->coincidence_window);
-    fprintf(stderr, "DEBUG coincidence_sum_threshold_pe %f\n", processor->relative_sum_threshold_pe);
-    fprintf(stderr, "DEBUG sum_threshold_pe             %f\n", processor->absolute_sum_threshold_pe);
+    fprintf(stderr, "DEBUG relative_wps_threshold       %f\n", processor->relative_wps_threshold);
+    fprintf(stderr, "DEBUG absolute_sum_threshold       %f\n", processor->absolute_wps_threshold);
     fprintf(stderr, "DEBUG enable_muon_coincidence      %d\n", processor->muon_coincidence);
 
     for (int i = 0; i < asc->ntraces; i++) {

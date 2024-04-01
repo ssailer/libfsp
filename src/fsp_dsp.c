@@ -471,7 +471,7 @@ void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigne
   assert(cfg->ntraces <= ntraces);
 
   int multiplicity = 0;
-  int n_below_min_value = 0;
+  int mult_below_threshold = 0;
   unsigned short max = 0;
   unsigned short min = USHRT_MAX;
   for (int i = 0; i < cfg->ntraces; i++) {
@@ -483,7 +483,7 @@ void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigne
       multiplicity++;
 
       if (fpga_energy < cfg->fpga_energy_threshold_adc[i])
-        n_below_min_value++;
+        mult_below_threshold++;
 
       if (fpga_energy < min) min = fpga_energy;
       if (fpga_energy > max) max = fpga_energy;
@@ -493,7 +493,7 @@ void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigne
   }
 
   cfg->multiplicity = multiplicity;
-  cfg->n_below_min_value = n_below_min_value;
+  cfg->mult_below_threshold = mult_below_threshold;
   cfg->max_value = max;
 
   if (!multiplicity) {

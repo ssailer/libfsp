@@ -176,7 +176,7 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
   int nfree = FSPFreeStates(processor);
 
   while (!(fsp_state = FSPOutput(processor))) {
-    /* this should handle the timeout, so we don't have to do it in the postprocessor.
+    /* this should handle the timeout, so we don't have to do it in the processor.
      */
     if (!nfree) {
       if (timedout) *timedout = 10;

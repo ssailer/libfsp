@@ -25,9 +25,9 @@ typedef struct StreamProcessor {
   Timestamp post_trigger_timestamp;
   Timestamp pre_trigger_timestamp;
 
-  float relative_sum_threshold_pe;
-  float absolute_sum_threshold_pe;
-  int majority_threshold;
+  float relative_wps_threshold;
+  float absolute_wps_threshold;
+  int hwm_threshold;
   int muon_coincidence;
 
   int wps_prescaling_offset;

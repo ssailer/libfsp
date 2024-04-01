@@ -69,10 +69,10 @@ typedef struct HardwareMajorityConfig {
 
   int fast;
   /* result fields */
-  int multiplicity;
-  int n_below_min_value;
-  unsigned short max_value;
-  unsigned short min_value;
+  int multiplicity; // multiplicity of hardware energy values
+  int mult_below_threshold; // counts the number of channels below fpga_energy_threshold_adc but > 0
+  unsigned short max_value; // the largest channel hw value
+  unsigned short min_value; // the smallest channel hw value, but > 0
 
 } HardwareMajorityConfig;
 
