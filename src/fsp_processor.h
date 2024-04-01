@@ -30,16 +30,16 @@ typedef struct StreamProcessor {
   int majority_threshold;
   int muon_coincidence;
 
-  int sipm_prescaling_offset;
-  int sipm_prescaling_counter;
-  float sipm_prescaling_rate;
-  char *sipm_prescaling;
+  int wps_prescaling_offset;
+  int wps_prescaling_counter;
+  char *wps_prescaling;
+  float wps_prescaling_rate;
+  Timestamp wps_prescaling_timestamp;
 
-  Timestamp sipm_prescaling_timestamp;
-  Timestamp ge_prescaling_timestamp;
 
-  int ge_prescaling_threshold_adc;
-  float ge_prescaling_rate;
+  Timestamp hwm_prescaling_timestamp;
+  int hwm_prescaling_threshold_adc;
+  float hwm_prescaling_rate;
 
   int loglevel;
 

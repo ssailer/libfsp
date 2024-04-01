@@ -84,8 +84,8 @@ StreamProcessor* FSPCreate(void) {
       (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
   processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
   processor->stats->start_time = 0.0;    // reset, actual start time happens with the first record insertion.
-  processor->ge_prescaling_timestamp.seconds = -1; // will init when it's needed
-  processor->sipm_prescaling_timestamp.seconds = -1; // will init when it's needed
+  processor->hwm_prescaling_timestamp.seconds = -1; // will init when it's needed
+  processor->wps_prescaling_timestamp.seconds = -1; // will init when it's needed
 
   /* default tracemap for HW and PS are fine, as they are allocated to zero.
      special aux channels need to be below zero, as they don't have an ntraces counter.

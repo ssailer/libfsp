@@ -76,7 +76,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
     return 0;
   }
   if (ge_average_prescaling_rate_hz >= 0.0)
-    processor->ge_prescaling_rate = ge_average_prescaling_rate_hz;
+    processor->hwm_prescaling_rate = ge_average_prescaling_rate_hz;
   else {
     fprintf(stderr, "CRITICAL ge_average_prescaling_rate_hz needs to be >= 0.0 is %f\n", ge_average_prescaling_rate_hz);
     return 0;
@@ -137,11 +137,11 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   processor->pre_trigger_window.nanoseconds = coincidence_pre_window_ns % 1000000000L;
   processor->post_trigger_window.seconds = coincidence_post_window_ns / 1000000000L;
   processor->post_trigger_window.nanoseconds = coincidence_post_window_ns % 1000000000L;
-  processor->sipm_prescaling_rate = average_prescaling_rate_hz;
-  if (processor->sipm_prescaling_rate > 0.0)
-    processor->sipm_prescaling = "average";  // could be "offset" when selecting ->sipm_prescaling_offset, but is disabled here.
+  processor->wps_prescaling_rate = average_prescaling_rate_hz;
+  if (processor->wps_prescaling_rate > 0.0)
+    processor->wps_prescaling = "average";  // could be "offset" when selecting ->wps_prescaling_offset, but is disabled here.
   else
-    processor->sipm_prescaling = NULL;
+    processor->wps_prescaling = NULL;
   processor->muon_coincidence = enable_muon_coincidence;
 
   // asc->repetition = processor->fast?4:sma_repetition;
@@ -200,7 +200,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
     /* DEBUGGING enabled, print all inputs */
     fprintf(stderr, "DEBUG LPPSetSiPMParameters:\n");
     fprintf(stderr, "DEBUG channelmap_format %d : %s\n", asc->tracemap_format, channelmap_fmt2str(format));
-    fprintf(stderr, "DEBUG average_prescaling_rate_hz   %f\n", processor->sipm_prescaling_rate);
+    fprintf(stderr, "DEBUG average_prescaling_rate_hz   %f\n", processor->wps_prescaling_rate);
     fprintf(stderr, "DEBUG sum_window_start_sample      %d\n", asc->sum_window_start_sample);
     fprintf(stderr, "DEBUG sum_window_stop_sample       %d\n", asc->sum_window_stop_sample);
     fprintf(stderr, "DEBUG dsp_pre_max_samples          %d\n", asc->dsp_pre_max_samples);

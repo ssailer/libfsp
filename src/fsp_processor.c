@@ -294,61 +294,61 @@ static inline FSPFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fl
     -> should result in pure veto triggers being prescaled.
   */
 
-  /* ge prescaling */
-  if (processor->ge_prescaling_rate > 0.0 && (flags.event & EVT_HWM_MULT_ENERGY_BELOW) &&
+  /* hwm prescaling */
+  if (processor->hwm_prescaling_rate > 0.0 && (flags.event & EVT_HWM_MULT_ENERGY_BELOW) &&
       ((flags.trigger & ST_HWM_TRIGGER) == 0)) {
-    if (processor->ge_prescaling_timestamp.seconds == -1) {
+    if (processor->hwm_prescaling_timestamp.seconds == -1) {
       /* initialize with the first event in the stream.*/
-      processor->ge_prescaling_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
+      processor->hwm_prescaling_timestamp = generate_prescaling_timestamp(processor->hwm_prescaling_rate);
     }
-    else if (timestamp_geq(event_unix_timestamp, processor->ge_prescaling_timestamp)) {
+    else if (timestamp_geq(event_unix_timestamp, processor->hwm_prescaling_timestamp)) {
       flags.trigger |= ST_HWM_PRESCALED;
-      Timestamp next_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
+      Timestamp next_timestamp = generate_prescaling_timestamp(processor->hwm_prescaling_rate);
       if (processor->loglevel >= 4)
-        fprintf(stderr, "DEBUG ge_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
-          processor->ge_prescaling_timestamp.seconds, processor->ge_prescaling_timestamp.nanoseconds,
+        fprintf(stderr, "DEBUG hwm_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
+          processor->hwm_prescaling_timestamp.seconds, processor->hwm_prescaling_timestamp.nanoseconds,
           next_timestamp.seconds, next_timestamp.nanoseconds
         );
-      processor->ge_prescaling_timestamp.seconds += next_timestamp.seconds;
-      processor->ge_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
+      processor->hwm_prescaling_timestamp.seconds += next_timestamp.seconds;
+      processor->hwm_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
     }
   }
 
-  /* sipm prescaling
+  /* wps prescaling
     Only prescales events which have not otherwise been triggered.
     Ge prescaling takes precedence.
-    TODO: Should this be a combined rate, i.e. the sipm_prescaling_timestamp be shifted even if it was
-          a ge_prescaled event?
+    TODO: Should this be a combined rate, i.e. the wps_prescaling_timestamp be shifted even if it was
+          a hwm_prescaled event?
   */
-  if (!processor->sipm_prescaling || flags.trigger) return flags;
+  if (!processor->wps_prescaling || flags.trigger) return flags;
 
-  switch (processor->sipm_prescaling[0]) {
+  switch (processor->wps_prescaling[0]) {
     case 'a': {
-      if (processor->sipm_prescaling_timestamp.seconds == -1) {
+      if (processor->wps_prescaling_timestamp.seconds == -1) {
         /* initialize with the first event in the stream.*/
-        processor->sipm_prescaling_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
+        processor->wps_prescaling_timestamp = generate_prescaling_timestamp(processor->wps_prescaling_rate);
       }
-      else if (timestamp_geq(event_unix_timestamp, processor->sipm_prescaling_timestamp)) {
+      else if (timestamp_geq(event_unix_timestamp, processor->wps_prescaling_timestamp)) {
         flags.trigger |= ST_WPS_PRESCALED;
-        Timestamp next_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
+        Timestamp next_timestamp = generate_prescaling_timestamp(processor->wps_prescaling_rate);
         if (processor->loglevel >= 4)
-        fprintf(stderr, "DEBUG sipm_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
-          processor->ge_prescaling_timestamp.seconds, processor->ge_prescaling_timestamp.nanoseconds,
+        fprintf(stderr, "DEBUG wps_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
+          processor->hwm_prescaling_timestamp.seconds, processor->hwm_prescaling_timestamp.nanoseconds,
           next_timestamp.seconds, next_timestamp.nanoseconds
         );
-        processor->sipm_prescaling_timestamp.seconds += next_timestamp.seconds;
-        processor->sipm_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
+        processor->wps_prescaling_timestamp.seconds += next_timestamp.seconds;
+        processor->wps_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
       }
 
       break;
     }
     case 'o': {
-      if (processor->sipm_prescaling_counter == processor->sipm_prescaling_offset) {
+      if (processor->wps_prescaling_counter == processor->wps_prescaling_offset) {
         flags.trigger |= ST_WPS_PRESCALED;
-        processor->sipm_prescaling_counter = 0;
+        processor->wps_prescaling_counter = 0;
 
       } else {
-        processor->sipm_prescaling_counter++;
+        processor->wps_prescaling_counter++;
       }
 
       break;
