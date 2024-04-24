@@ -32,11 +32,7 @@ typedef struct WindowedPeakSumConfig {
   int coincidence_window;
   int sum_window_start_sample;
   int sum_window_stop_sample;
-
-  /* testing -> determine the above threshold snippets
-      coincidence_window_trigger_list_threshold should be the same as the largest_sum_pe threshold in the calling
-  */
-  WPSTriggerList trigger_list;
+  float coincidence_threshold;
 
   float peak_trace[FCIOMaxSamples];
   float diff_trace[FCIOMaxSamples];
@@ -47,12 +43,18 @@ typedef struct WindowedPeakSumConfig {
   int work_trace_i32[FCIOMaxSamples * 3];
   int work_trace2_i32[FCIOMaxSamples * 3];
 
+  /* result fields */
+
+  /* testing -> determine the above threshold snippets
+      coincidence_window_trigger_list_threshold should be the same as the largest_sum_pe threshold in the calling
+  */
+  WPSTriggerList* trigger_list;
+
   float max_peak_sum_value;
   int max_peak_sum_offset;
   float max_peak_value;
   int max_peak_offset;
   int max_peak_sum_multiplicity;
-
 
   float *peak_times;
   float *peak_amplitudes;
@@ -76,6 +78,18 @@ typedef struct HardwareMajorityConfig {
 
 } HardwareMajorityConfig;
 
+typedef struct ChannelThresholdConfig {
+  int tracemap_format;
+  int ntraces;
+  int tracemap[FCIOMaxChannels];
+  unsigned short thresholds[FCIOMaxChannels];
+  const char* labels[FCIOMaxChannels];
+  /* result fields */
+  unsigned short max_values[FCIOMaxChannels];
+  int max_tracemap_idx[FCIOMaxChannels];
+  int multiplicity;
+} ChannelThresholdConfig;
+
 /* Differentiates trace, searches for gain adjusted peaks above threshold. Peaks are stored in peak_trace.*/
 float fsp_dsp_diff_and_find_peaks(float *input_trace, float *diff_trace, float *peak_trace, int start, int stop,
                                    int nsamples, float gain, float threshold);
@@ -93,9 +107,11 @@ void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int s
 int fsp_dsp_diff_and_smooth_pre_samples(unsigned int shaping_width_samples, float lowpass);
 int fsp_dsp_diff_and_smooth_post_samples(unsigned int shaping_width_samples, float lowpass);
 
-void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *proc, int nsamples, int ntraces, unsigned short **traces);
-void fsp_dsp_hardware_majority(HardwareMajorityConfig *fpga_majority_cfg, int ntraces, unsigned short **trace_headers);
-
 unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int stop, int nsamples, unsigned short threshold);
+
+void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntraces, unsigned short **traces);
+void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigned short **trace_headers);
+void fsp_dsp_channel_threshold(ChannelThresholdConfig* cfg, int nsamples, int ntraces, unsigned short **traces, unsigned short **theaders);
+
 
 void tracewindow(int n, float *trace, int ss, double gain, float *out);

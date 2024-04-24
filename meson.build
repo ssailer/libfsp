@@ -4,7 +4,7 @@ project('libfsp', 'c','cpp',
   license_files: 'LICENSE',
    default_options : [
     'warning_level=3',
-    'c_std=c99',
+    'c_std=c11',
     'buildtype=release',
     'default_library=static',
     'prefer_static=true',

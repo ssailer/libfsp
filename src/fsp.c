@@ -43,12 +43,12 @@ FSPState* FSPOutput(StreamProcessor* processor) {
     return NULL;
   }
 
-  fsp_state->write = fsp_write_decision(processor, fsp_state);
+  fsp_state->write = fsp_write_decision(fsp_state);
 
-  if (processor->wps_cfg)
-    fsp_state->wps_trigger_list = &processor->wps_cfg->trigger_list;
-  else
-    fsp_state->wps_trigger_list = NULL;
+  // if (processor->wps_cfg)
+  //   fsp_state->obs.wps.trigger_list = &processor->wps_cfg->trigger_list;
+  // else
+  //   fsp_state->obs.wps.trigger_list = NULL;
 
   if (fsp_state->write) {
     processor->nrecords_written++;
@@ -64,14 +64,21 @@ FSPState* FSPOutput(StreamProcessor* processor) {
   return fsp_state;
 }
 
-void FSPEnableTriggerFlags(StreamProcessor* processor, unsigned int flags) {
-  processor->set_trigger_flags = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %u\n", flags);
+void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags) {
+  processor->enabled_flags.trigger = flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %lu\n", flags.is_flagged);
 }
 
-void FSPEnableEventFlags(StreamProcessor* processor, unsigned int flags) {
-  processor->set_event_flags = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %u\n", flags);
+void FSPEnableEventFlags(StreamProcessor* processor, EventFlags flags) {
+  processor->enabled_flags.event = flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %lu\n", flags.is_flagged);
+}
+
+void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags) {
+  processor->wps_reference_flags_ct = ct_flags;
+  processor->wps_reference_flags_hwm = hwm_flags;
+  processor->wps_reference_flags_wps = wps_flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %lu ct %lu wps %lu\n", hwm_flags, ct_flags, wps_flags);
 }
 
 StreamProcessor* FSPCreate(void) {
@@ -87,16 +94,17 @@ StreamProcessor* FSPCreate(void) {
   processor->hwm_prescaling_timestamp.seconds = -1; // will init when it's needed
   processor->wps_prescaling_timestamp.seconds = -1; // will init when it's needed
 
-  /* default tracemap for HW and PS are fine, as they are allocated to zero.
-     special aux channels need to be below zero, as they don't have an ntraces counter.
-  */
-  processor->aux.pulser_trace_index = -1;
-  processor->aux.baseline_trace_index = -1;
-  processor->aux.muon_trace_index = -1;
-
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
-  FSPEnableEventFlags(processor, EVT_EXTENDED | EVT_RETRIGGER | EVT_DF_PULSER | EVT_DF_BASELINE);
-  FSPEnableTriggerFlags(processor, ST_HWM_TRIGGER | ST_HWM_PRESCALED | ST_WPS_ABS_TRIGGER | ST_WPS_REL_TRIGGER | ST_WPS_PRESCALED);
+  // FSPEnableEventFlags(processor, EVT_EXTENDED | EVT_RETRIGGER);
+  // FSPEnableTriggerFlags(processor, ST_HWM_TRIGGER | ST_HWM_PRESCALED | ST_WPS_ABS_TRIGGER | ST_WPS_REL_TRIGGER | ST_WPS_PRESCALED | ST_CT_TRIGGER );
+  // FSPSetWPSReferenceFlag(processor, EVT_HWM_MULT_THRESHOLD);
+  FSPEnableEventFlags(processor, (EventFlags){ .is_retrigger = 1, .is_extended = 1});
+  FSPEnableTriggerFlags(processor, (STFlags){ .hwm_multiplicity = 1, .hwm_prescaled = 1, .wps_abs = 1, .wps_rel = 1, .wps_prescaled = 1, .ct_multiplicity = 1} );
+  HWMFlags ref_hwm = {0};
+  ref_hwm.multiplicity_threshold = 1;
+  CTFlags ref_ct = {0};
+  WPSFlags ref_wps = {0};
+  FSPSetWPSReferenceFlag(processor, ref_hwm.is_flagged, ref_ct.is_flagged, ref_wps.is_flagged);
 
   return processor;
 }
@@ -135,6 +143,7 @@ void FSPDestroy(StreamProcessor* processor) {
   free(processor->stats);
   free(processor->hwm_cfg);
   free(processor->wps_cfg);
+  free(processor->ct_cfg);
   free(processor);
 }
 

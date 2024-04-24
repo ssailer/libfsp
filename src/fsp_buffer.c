@@ -15,6 +15,9 @@ FSPBuffer *FSPBufferCreate(unsigned int buffer_depth, Timestamp buffer_window) {
 
   buffer->fsp_states = (FSPState *)calloc(buffer->max_states, sizeof(FSPState));
 
+  // for (int i = 0; buffer->max_states; i++)
+  //   buffer->fsp_states[i]->obs.wps->trigger_list = (WPSTriggerList*)calloc(1, sizeof(WPSTriggerList));
+
   buffer->insert_state = 0;
   buffer->nrecords_inserted = 0;
 
@@ -62,11 +65,11 @@ void FSPBufferCommitState(FSPBuffer *buffer) {
   fsp_state->in_buffer = 1;
   buffer->insert_state = (buffer->insert_state + 1) % buffer->max_states;
   buffer->nrecords_inserted++;
-  if (fsp_state->contains_timestamp)
+  if (fsp_state->has_timestamp)
     buffer->buffer_timestamp = timestamp_sub(fsp_state->timestamp, buffer->buffer_window);
 
   buffer->fill_level++;
-  // fprintf(stderr, "DEBUG/BUFFER: insert_state %d has_timestamp %d fill_level %d last_tag %d\n", buffer->insert_state-1, fsp_state->contains_timestamp, buffer->fill_level, fsp_state->state->last_tag);
+  // fprintf(stderr, "DEBUG/BUFFER: insert_state %d has_timestamp %d fill_level %d last_tag %d\n", buffer->insert_state-1, fsp_state->has_timestamp, buffer->fill_level, fsp_state->state->last_tag);
 }
 
 FSPState *FSPBufferFetchState(FSPBuffer *buffer) {

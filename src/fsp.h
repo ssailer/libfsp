@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <fsp_processor.h>
 #include <fsp_dsp.h>
 #include <fsp_state.h>
@@ -7,6 +8,7 @@
 #include <fsp_l200.h>
 #include <fsp_channelmaps.h>
 
+#include <stdint.h>
 #include <stddef.h>
 
 #include <fcio.h>
@@ -22,8 +24,9 @@ int FSPSetBufferSize(StreamProcessor *processor, int buffer_depth);
 void FSPSetLogLevel(StreamProcessor *processor, int loglevel);
 void FSPSetLogTime(StreamProcessor *processor, double log_time);
 
-void FSPEnableTriggerFlags(StreamProcessor *processor, unsigned int flags);
-void FSPEnableEventFlags(StreamProcessor *processor, unsigned int flags);
+void FSPEnableTriggerFlags(StreamProcessor *processor, STFlags flags);
+void FSPEnableEventFlags(StreamProcessor *processor, EventFlags flags);
+void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags);
 
 /* use in loop operations:
   - Feed FCIOStates via LPPInput asap

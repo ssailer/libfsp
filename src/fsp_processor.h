@@ -30,6 +30,10 @@ typedef struct StreamProcessor {
   int hwm_threshold;
   int muon_coincidence;
 
+  uint64_t wps_reference_flags_ct;
+  uint64_t wps_reference_flags_hwm;
+  uint64_t wps_reference_flags_wps;
+
   int wps_prescaling_offset;
   int wps_prescaling_counter;
   char *wps_prescaling;
@@ -47,21 +51,7 @@ typedef struct StreamProcessor {
 
   int checks;
 
-  unsigned int set_trigger_flags;
-  unsigned int set_event_flags;
-
-  struct {
-    int pulser_trace_index;
-    int pulser_adc_threshold;
-
-    int baseline_trace_index;
-    int baseline_adc_threshold;
-
-    int muon_trace_index;
-    int muon_adc_threshold;
-
-    int tracemap_format;
-  } aux;
+  FSPFlags enabled_flags;
 
   FSPBuffer *buffer;
   Timestamp minimum_buffer_window;
@@ -69,9 +59,10 @@ typedef struct StreamProcessor {
 
   WindowedPeakSumConfig *wps_cfg;
   HardwareMajorityConfig *hwm_cfg;
+  ChannelThresholdConfig *ct_cfg;
 
 } StreamProcessor;
 
 
 int fsp_process(StreamProcessor* processor, FSPState* fsp_state, FCIOState* state);
-unsigned int fsp_write_decision(StreamProcessor* processor, FSPState* fsp_state);
+unsigned int fsp_write_decision(FSPState* fsp_state);
