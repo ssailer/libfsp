@@ -349,12 +349,7 @@ static inline size_t st_flag_2char(char* string, size_t strlen, STFlags st_flags
 
   int written = 0;
   string[written++] = ':';
-  // if (st_flags & ST_HWM_TRIGGER) string[written] = 'M';
-  // if (st_flags & ST_HWM_PRESCALED) string[written] = 'G';
-  // if (st_flags & ST_WPS_ABS_TRIGGER) string[written] = 'P';
-  // if (st_flags & ST_WPS_REL_TRIGGER) string[written] = 'C';
-  // if (st_flags & ST_WPS_PRESCALED) string[written] = 'S';
-  // if (st_flags & ST_CT_TRIGGER) string[written] = 'T';
+
   if (st_flags.hwm_multiplicity) string[written] = 'M' ;
   written++;
   if (st_flags.hwm_prescaled) string[written] = 'G' ;
@@ -368,7 +363,6 @@ static inline size_t st_flag_2char(char* string, size_t strlen, STFlags st_flags
   if (st_flags.ct_multiplicity) string[written] = 'T' ;
   written++;
 
-  // string[10] = '\0';
   return written;
 }
 
@@ -429,8 +423,9 @@ void FSPFlags2BitField(FSPFlags flags, uint32_t* trigger_field, uint32_t* event_
   tfield |= ((flags.trigger.wps_rel & 0x1)          << 3);
   tfield |= ((flags.trigger.wps_prescaled & 0x1)    << 4);
   tfield |= ((flags.trigger.ct_multiplicity & 0x1)  << 5);
-  efield |= ((flags.event.is_retrigger & 0x1)         << 0);
-  efield |= ((flags.event.is_extended & 0x1)          << 1);
+
+  efield |= ((flags.event.is_extended & 0x1)          << 0);
+  efield |= ((flags.event.is_retrigger & 0x1)         << 1);
   efield |= ((flags.wps.abs_threshold & 0x1)          << 2);
   efield |= ((flags.wps.rel_threshold & 0x1)          << 3);
   efield |= ((flags.wps.rel_reference & 0x1)          << 4);
@@ -447,28 +442,31 @@ void FSPFlags2BitField(FSPFlags flags, uint32_t* trigger_field, uint32_t* event_
 void FSPFlags2BitString(FSPFlags flags, size_t strlen, char* trigger_string, char* event_string)
 {
   assert(strlen >= 13);
+
+  char* trgstring = &trigger_string[8];
+  char* evtstring = &event_string[12];
   
-  *trigger_string++ = '0';
-  *trigger_string++ = 'b';
-  *trigger_string++ = (flags.trigger.hwm_multiplicity & 0x1) ? '1' : '0';
-  *trigger_string++ = (flags.trigger.hwm_prescaled & 0x1) ? '1' : '0';
-  *trigger_string++ = (flags.trigger.wps_abs & 0x1) ? '1' : '0';
-  *trigger_string++ = (flags.trigger.wps_rel & 0x1) ? '1' : '0';
-  *trigger_string++ = (flags.trigger.wps_prescaled & 0x1) ? '1' : '0';
-  *trigger_string++ = (flags.trigger.ct_multiplicity & 0x1) ? '1' : '0';
-  *trigger_string = 0;
-  
-  *event_string++ = '0';
-  *event_string++ = 'b';
-  *event_string++ = (flags.event.is_retrigger & 0x1) ? '1' : '0';
-  *event_string++ = (flags.event.is_extended & 0x1) ? '1' : '0';
-  *event_string++ = (flags.wps.abs_threshold & 0x1) ? '1' : '0';
-  *event_string++ = (flags.wps.rel_threshold & 0x1) ? '1' : '0';
-  *event_string++ = (flags.wps.rel_reference & 0x1) ? '1' : '0';
-  *event_string++ = (flags.wps.rel_pre_window & 0x1) ? '1' : '0';
-  *event_string++ = (flags.wps.rel_post_window & 0x1) ? '1' : '0';
-  *event_string++ = (flags.hwm.multiplicity_threshold & 0x1) ? '1' : '0';
-  *event_string++ = (flags.hwm.multiplicity_below & 0x1) ? '1' : '0';
-  *event_string++ = (flags.ct.multiplicity & 0x1) ? '1' : '0';
-  *event_string = 0;
+  *trgstring-- = 0;
+  *trgstring-- = (flags.trigger.hwm_multiplicity & 0x1) ? '1' : '0';
+  *trgstring-- = (flags.trigger.hwm_prescaled & 0x1) ? '1' : '0';
+  *trgstring-- = (flags.trigger.wps_abs & 0x1) ? '1' : '0';
+  *trgstring-- = (flags.trigger.wps_rel & 0x1) ? '1' : '0';
+  *trgstring-- = (flags.trigger.wps_prescaled & 0x1) ? '1' : '0';
+  *trgstring-- = (flags.trigger.ct_multiplicity & 0x1) ? '1' : '0';
+  *trgstring-- = 'b';
+  *trgstring = '0';
+
+  *evtstring-- = 0;
+  *evtstring-- = (flags.event.is_extended & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.event.is_retrigger & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.wps.abs_threshold & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.wps.rel_threshold & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.wps.rel_reference & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.wps.rel_pre_window & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.wps.rel_post_window & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.hwm.multiplicity_threshold & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.hwm.multiplicity_below & 0x1) ? '1' : '0';
+  *evtstring-- = (flags.ct.multiplicity & 0x1) ? '1' : '0';
+  *evtstring-- = 'b';
+  *evtstring-- = '0';
 }
