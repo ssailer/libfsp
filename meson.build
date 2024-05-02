@@ -25,6 +25,7 @@ fsp_sources = files(
   'src/fsp_processor.c',
   'src/fsp_stats.c',
   'src/fsp_timestamps.c',
+  'src/fsp_serializers.c',
   'src/fsp.c',
 )
 
@@ -45,6 +46,7 @@ install_headers(
   'src/fsp_stats.h',
   'src/fsp_l200.h',
   'src/fsp_channelmaps.h',
+  'src/fsp_serializers.h',
 )
 
 pkg_mod = import('pkgconfig')

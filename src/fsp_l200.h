@@ -49,9 +49,6 @@ static inline int load_sipm_tracemap(int max_channels, int *channels) {
 //   return nchannels;
 // }
 
-void FSPFlags2Char(FSPState *fsp_state, size_t strlen, char *cstring);
-void FSPFlags2BitString(FSPFlags flags, size_t strlen, char* trigger_string, char* event_string);
-
 int FSPSetAuxParameters(StreamProcessor *processor, FSPChannelFormat format, int digital_pulser_channel,
                         int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,
                         int digital_muon_channel, int muon_level_adc);

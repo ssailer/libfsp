@@ -7,6 +7,7 @@
 #include <fsp_stats.h>
 #include <fsp_l200.h>
 #include <fsp_channelmaps.h>
+#include <fsp_serializers.h>
 
 #include <stdint.h>
 #include <stddef.h>
