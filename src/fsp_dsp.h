@@ -94,12 +94,6 @@ typedef struct ChannelThresholdConfig {
 float fsp_dsp_diff_and_find_peaks(float *input_trace, float *diff_trace, float *peak_trace, int start, int stop,
                                    int nsamples, float gain, float threshold);
 
-/* applies <repetition> times centered moving averages with shaping_width_samples to trace, and applies
-  diff_and_find_peaks. Needs work_trace for moving averages.
-*/
-// unsigned int fsp_dsp_diff_and_smooth(int nsamples, unsigned int shaping_width_samples, unsigned int repetition,
-//     unsigned short* input_trace, float* diff_trace, float* peak_trace, float* work_trace, float* work_trace2, float
-//     gain, float threshold);
 void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int shaping_width_samples,
                               unsigned short *input_trace, float *diff_trace, float *peak_trace, float *work_trace,
                               float *work_trace2, float gain, int apply_gain_scaling, float threshold, float lowpass,

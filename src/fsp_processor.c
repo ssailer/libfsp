@@ -154,8 +154,6 @@ static inline CTFlags fsp_st_channel_thresholds(StreamProcessor* processor, FCIO
   fsp_dsp_channel_threshold(processor->ct_cfg, config->eventsamples, config->adcs, event->trace, event->theader);
 
   if (processor->ct_cfg->multiplicity) {
-    // flags.event |= EVT_CT_THRESHOLD;
-    // flags.trigger |= ST_CT_TRIGGER;
     ctflags.multiplicity = 1;
   }
 
@@ -175,9 +173,7 @@ static inline HWMFlags fsp_st_hardware_majority(StreamProcessor* processor, FCIO
 
   fsp_dsp_hardware_majority(processor->hwm_cfg, config->adcs, event->theader);
 
-  /* don't set to higher than 1 if you are sane */
   if (processor->hwm_cfg->multiplicity >= processor->hwm_threshold) {
-    // flags.event |= EVT_HWM_MULT_THRESHOLD;
     hwmflags.multiplicity_threshold = 1;
 
     /* if majority is >= 1, then the following check is safe, otherwise think about what happens when majority == 0
@@ -185,11 +181,7 @@ static inline HWMFlags fsp_st_hardware_majority(StreamProcessor* processor, FCIO
        prescaled and not affect the rest of the datastream.
     */
     if (processor->hwm_cfg->mult_below_threshold == processor->hwm_cfg->multiplicity) {
-      // flags.event |= EVT_HWM_MULT_ENERGY_BELOW;
       hwmflags.multiplicity_below = 1;
-    // } else {
-      // flags.trigger |= ST_HWM_TRIGGER;
-      // flags.event |= EVT_WPS_REL_REFERENCE;
     }
   }
 
@@ -231,19 +223,12 @@ static inline WPSFlags fsp_st_windowed_peak_sum(StreamProcessor* processor, FCIO
   }
 
   if (processor->wps_cfg->max_peak_sum_value >= processor->absolute_wps_threshold) {
-    // flags.event |= EVT_WPS_ABS_THRESHOLD;
-    // flags.trigger |= ST_WPS_ABS_TRIGGER;
     wpsflags.abs_threshold = 1;
   }
 
   if (processor->wps_cfg->max_peak_sum_value >= processor->relative_wps_threshold) {
-    // flags.event |= EVT_WPS_REL_THRESHOLD;
     wpsflags.rel_threshold = 1;
   }
-
-  // if (processor->muon_coincidence && flags.event & EVT_DF_MUON) {
-  //   flags.trigger |= ST_HWM_TRIGGER;
-  // }
 
   return wpsflags;
 }
@@ -271,15 +256,12 @@ static inline STFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fla
   STFlags trgflags = {0};
 
   /* hwm prescaling */
-  // if (processor->hwm_prescaling_rate > 0.0 && (flags.event & EVT_HWM_MULT_ENERGY_BELOW) &&
-  //     ((flags.trigger & ST_HWM_TRIGGER) == 0)) {
   if (processor->hwm_prescaling_rate > 0.0 && (flags.hwm.multiplicity_below)) {
     if (processor->hwm_prescaling_timestamp.seconds == -1) {
       /* initialize with the first event in the stream.*/
       processor->hwm_prescaling_timestamp = generate_prescaling_timestamp(processor->hwm_prescaling_rate);
     }
     else if (timestamp_geq(event_unix_timestamp, processor->hwm_prescaling_timestamp)) {
-      // flags.trigger |= ST_HWM_PRESCALED;
       trgflags.hwm_prescaled = 1;
       Timestamp next_timestamp = generate_prescaling_timestamp(processor->hwm_prescaling_rate);
       if (processor->loglevel >= 4)
@@ -307,7 +289,6 @@ static inline STFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fla
         processor->wps_prescaling_timestamp = generate_prescaling_timestamp(processor->wps_prescaling_rate);
       }
       else if (timestamp_geq(event_unix_timestamp, processor->wps_prescaling_timestamp)) {
-        // flags.trigger |= ST_WPS_PRESCALED;
         trgflags.wps_prescaled = 1;
         Timestamp next_timestamp = generate_prescaling_timestamp(processor->wps_prescaling_rate);
         if (processor->loglevel >= 4)
@@ -323,7 +304,6 @@ static inline STFlags fsp_st_prescaling(StreamProcessor* processor, FSPFlags fla
     }
     case 'o': {
       if (processor->wps_prescaling_counter == processor->wps_prescaling_offset) {
-        // flags.trigger |= ST_WPS_PRESCALED;
         trgflags.wps_prescaled = 1;
         processor->wps_prescaling_counter = 0;
 
@@ -342,7 +322,6 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
   HardwareMajorityConfig* hwm_cfg = processor->hwm_cfg;
   ChannelThresholdConfig* ct_cfg = processor->ct_cfg;
 
-  // FSPFlags flags = {.event = EVT_NULL, .trigger = ST_NULL};
   FSPFlags flags = {0};
 
   fsp_state->stream_tag = state->last_tag;
@@ -360,7 +339,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       fsp_state->unixstamp = fcio_time_run2unix(fsp_state->timestamp, state->event->timeoffset, state->config->gps);
 
       if (processor->checks) {
-        const int max_ticks = 249999999;
+        const int max_ticks = FC_MAXTICKS;
         if (state->event->timestamp[2] > max_ticks) {
           if (processor->loglevel >= 2)
             fprintf(stderr, "WARNING timestamp of event %i is out of bounds (ticks=%u)\n", state->event->timestamp[0],
@@ -557,7 +536,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       break;
     }
     case FCIOStatus:
-      // TODO check if the the data[0].pps/ticks/maxticks is a valid timestamp for the statuspaket
+      // TODO check if the the data[0].pps/ticks/maxticks is a valid timestamp for the statuspaket.
       // the status.statustime throws away the nanoseconds. The only advantage would be, that we might
       // send some soft triggered events a bit earlier, as the pre-trigger timestamp shift, if we use the
       // status timestamp here.
@@ -577,23 +556,18 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
     /*
       state timestamp is within the post trigger timestamp
     */
-    // fsp_state->flags.event |= EVT_WPS_REL_POST_WINDOW;
     fsp_state->flags.wps.rel_post_window = 1;
 
     /*
       state peak sum value above relative trigger threshold
     */
-    // if (fsp_state->flags.event & EVT_WPS_REL_THRESHOLD) {
-    //   fsp_state->flags.trigger |= ST_WPS_REL_TRIGGER;
-    // }
     if (processor->enabled_flags.trigger.wps_rel && fsp_state->flags.wps.rel_threshold) {
       fsp_state->flags.trigger.wps_rel = 1;
     }
   }
 
-  // if (fsp_state->flags.event & EVT_WPS_REL_REFERENCE) {
   if (fsp_state->flags.wps.rel_reference) {
-    /* current state is hardware majority trigger,
+    /* current state is reference for WPS relative trigger
       keep it and start checking all previous and future states against
       the trigger windows.
     */
@@ -609,10 +583,7 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
     {
       if (!update_fsp_state->has_timestamp)
         continue;
-      // update_fsp_state->flags.event |= EVT_WPS_REL_PRE_WINDOW;
-      // if (update_fsp_state->flags.event & EVT_WPS_REL_THRESHOLD) {
-      //   update_fsp_state->flags.trigger |= ST_WPS_REL_TRIGGER;
-      // }
+
       update_fsp_state->flags.wps.rel_pre_window = 1;
       if (processor->enabled_flags.trigger.wps_rel && update_fsp_state->flags.wps.rel_threshold) {
         update_fsp_state->flags.trigger.wps_rel = 1;
@@ -620,7 +591,6 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
     }
   }
 
-  // if (fsp_state->flags.event & EVT_RETRIGGER) {
   if (fsp_state->flags.event.is_retrigger) {
     FSPState* update_fsp_state = NULL;
     int previous_counter = 0;
@@ -628,11 +598,7 @@ void fsp_process_timings(StreamProcessor* processor, FSPState* fsp_state) {
     while ( (update_fsp_state = FSPBufferGetState(processor->buffer, previous_counter--)) ) {
       if (!update_fsp_state->has_timestamp)
         continue;
-      // if ((update_fsp_state->flags.event & EVT_RETRIGGER) == 0) {
-      //   update_fsp_state->flags.event |= EVT_EXTENDED;
-      //   break;
-      // }
-      if (! update_fsp_state->flags.event.is_retrigger) {
+      if (!update_fsp_state->flags.event.is_retrigger) {
         update_fsp_state->flags.event.is_extended = 1;
         update_fsp_state->obs.evt.nextension = nretrigger;
         break;

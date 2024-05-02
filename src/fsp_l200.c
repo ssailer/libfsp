@@ -146,7 +146,6 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
     processor->wps_prescaling = NULL;
   processor->muon_coincidence = enable_muon_coincidence;
 
-  // wps_cfg->repetition = processor->fast?4:sma_repetition;
   wps_cfg->coincidence_window = coincidence_window_samples;
   wps_cfg->sum_window_start_sample = sum_window_start_sample;
   wps_cfg->sum_window_stop_sample = sum_window_stop_sample;

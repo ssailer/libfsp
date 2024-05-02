@@ -8,6 +8,8 @@
 
 #include <fcio.h>
 
+#define FC_MAXTICKS 249999999
+
 typedef struct StreamProcessor {
   Timestamp pre_trigger_window;
   Timestamp post_trigger_window;

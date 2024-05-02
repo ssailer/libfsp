@@ -45,11 +45,6 @@ FSPState* FSPOutput(StreamProcessor* processor) {
 
   fsp_state->write = fsp_write_decision(fsp_state);
 
-  // if (processor->wps_cfg)
-  //   fsp_state->obs.wps.trigger_list = &processor->wps_cfg->trigger_list;
-  // else
-  //   fsp_state->obs.wps.trigger_list = NULL;
-
   if (fsp_state->write) {
     processor->nrecords_written++;
     if ((fsp_state->state->last_tag == FCIOEvent) || (fsp_state->state->last_tag == FCIOSparseEvent))
@@ -95,9 +90,6 @@ StreamProcessor* FSPCreate(void) {
   processor->wps_prescaling_timestamp.seconds = -1; // will init when it's needed
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
-  // FSPEnableEventFlags(processor, EVT_EXTENDED | EVT_RETRIGGER);
-  // FSPEnableTriggerFlags(processor, ST_HWM_TRIGGER | ST_HWM_PRESCALED | ST_WPS_ABS_TRIGGER | ST_WPS_REL_TRIGGER | ST_WPS_PRESCALED | ST_CT_TRIGGER );
-  // FSPSetWPSReferenceFlag(processor, EVT_HWM_MULT_THRESHOLD);
   FSPEnableEventFlags(processor, (EventFlags){ .is_retrigger = 1, .is_extended = 1});
   FSPEnableTriggerFlags(processor, (STFlags){ .hwm_multiplicity = 1, .hwm_prescaled = 1, .wps_abs = 1, .wps_rel = 1, .wps_prescaled = 1, .ct_multiplicity = 1} );
   HWMFlags ref_hwm = {0};
@@ -194,21 +186,18 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
     state = FCIOGetNextState(reader, timedout);
 
     if (!state) {
-      /* End-of-Stream or timeout reached, we assume finish and flush
+      /* End-of-Stream or timeout reached, fcio will close with any of the following timedout states:
         timedout == 0 here means stream is closed, no timeout was reached
         timedout == 1 no event from buffer for specified timeout interval.
         timedout == 2 stream is still alive, but only unselected tags arrived
       */
       if (FSPFlush(processor)) {
-        continue;  // still something in the buffer, try to read the rest after unlocking the buffer window.
+        continue;  // still something in the buffer. FSPFlush unlocks the buffer and FSPOutput will read until the end.
       } else {
         return NULL;
       }
     } else {
-      // int n_free_buffer_states = FSPInput(processor, state); // got a valid state, process and hope that we get a new
-      // fsp_state
-      nfree = FSPInput(processor,
-                       state);  // got a valid state, process and hope that we get a new fsp_state on the next loop
+      nfree = FSPInput(processor,state);  // got a valid state
     }
   }
 

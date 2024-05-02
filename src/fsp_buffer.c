@@ -15,9 +15,6 @@ FSPBuffer *FSPBufferCreate(unsigned int buffer_depth, Timestamp buffer_window) {
 
   buffer->fsp_states = (FSPState *)calloc(buffer->max_states, sizeof(FSPState));
 
-  // for (int i = 0; buffer->max_states; i++)
-  //   buffer->fsp_states[i]->obs.wps->trigger_list = (WPSTriggerList*)calloc(1, sizeof(WPSTriggerList));
-
   buffer->insert_state = 0;
   buffer->nrecords_inserted = 0;
 
@@ -83,17 +80,10 @@ FSPState *FSPBufferFetchState(FSPBuffer *buffer) {
     buffer->nrecords_fetched++;
     buffer->fill_level--;
 
-    // record is handed off, forget about it ... until we reuse it.
+    // record is handed off, forget about it
     fsp_state->in_buffer = 0;
 
     return fsp_state;
-  // } else {
-    // Timestamp delta = timestamp_sub(buffer->buffer_timestamp, fsp_state->timestamp);
-    // fprintf(stderr, "DEBUG/BUFFER: Cannot fetch from buffer: fsp_state %p in_buffer %d buffer_ts=%ld.%09ld fsp_state_ts=%ld.%09ld delta_ts=%ld.%09ld\n",
-    //   (void*)fsp_state, fsp_state->in_buffer, buffer->buffer_timestamp.seconds, buffer->buffer_timestamp.nanoseconds,
-    //   fsp_state->timestamp.seconds, fsp_state->timestamp.nanoseconds,
-    //   delta.seconds, delta.nanoseconds
-    // );
   }
 
   return NULL;

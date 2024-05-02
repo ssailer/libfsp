@@ -7,39 +7,6 @@
 #include <fsp_timestamps.h>
 #include <fsp_dsp.h>
 
-// #define ST_NSTATES 5
-// typedef enum SoftwareTriggerFlags {
-
-//   ST_NULL = 0,
-//   ST_HWM_TRIGGER = 1 << 0,
-//   ST_HWM_PRESCALED = 1 << 1,
-//   ST_WPS_ABS_TRIGGER = 1 << 2,
-//   ST_WPS_REL_TRIGGER = 1 << 3,
-//   ST_WPS_PRESCALED = 1 << 4,
-//   ST_CT_TRIGGER = 1 << 5,
-
-// } SoftwareTriggerFlags;
-
-// #define EVT_NSTATES 12
-// typedef enum EventFlags {
-
-//   EVT_NULL = 0,
-//   EVT_RETRIGGER = 1 << 0,
-//   EVT_EXTENDED = 1 << 1,
-//   EVT_HWM_MULT_THRESHOLD = 1 << 2,
-//   EVT_HWM_MULT_ENERGY_BELOW = 1 << 3,
-//   EVT_WPS_ABS_THRESHOLD = 1 << 4,
-//   EVT_WPS_REL_THRESHOLD = 1 << 5,
-//   EVT_WPS_REL_REFERENCE = 1 << 6,
-//   EVT_WPS_REL_PRE_WINDOW = 1 << 7,
-//   EVT_WPS_REL_POST_WINDOW = 1 << 8,
-//   EVT_CT_THRESHOLD = 1 << 9,
-//   // EVT_DF_PULSER = 1 << 9,
-//   // EVT_DF_BASELINE = 1 << 10,
-//   // EVT_DF_MUON = 1 << 11,
-
-// } EventFlags;
-
 typedef union STFlags {
   struct {
     uint8_t hwm_multiplicity; // the multiplicity threshold has been reached
@@ -84,7 +51,7 @@ typedef union HWMFlags {
 // Channel Threshold
 typedef union CTFlags {
   struct {
-    uint8_t multiplicity; // number of triggered channels (amplitude above threshold)
+    uint8_t multiplicity; // if number of threshold triggers > 0
   };
   uint64_t is_flagged;
 } CTFlags;

@@ -29,17 +29,17 @@ void FSPEnableTriggerFlags(StreamProcessor *processor, STFlags flags);
 void FSPEnableEventFlags(StreamProcessor *processor, EventFlags flags);
 void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags);
 
-/* use in loop operations:
-  - Feed FCIOStates via LPPInput asap
-  - Poll LPPOutput until NULL
-  - if states are null, buffer is flushed
+/* Use FSPGetNextState to process states provided by FCIOStateReader until it returns NULL.
+    - Feed FCIOStates from FCIOGetNextStatevia LPPInput
+    - Poll FSPOutput until NULL
+    - if states are null, buffer is flushed
 */
+FSPState *FSPGetNextState(StreamProcessor *processor, FCIOStateReader *reader, int *timedout);
 
 int FSPInput(StreamProcessor *processor, FCIOState *state);
 FSPState *FSPOutput(StreamProcessor *processor);
 int FSPFlush(StreamProcessor *processor);
 int FSPFreeStates(StreamProcessor *processor);
-FSPState *FSPGetNextState(StreamProcessor *processor, FCIOStateReader *reader, int *timedout);
 
 int FSPStatsInfluxString(StreamProcessor* processor, char* logstring, size_t logstring_size);
 int FSPStatsUpdate(StreamProcessor* processor, int force);

@@ -408,8 +408,6 @@ void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntr
     *(cfg->total_pulses) = 0;
   }
 
-  // int valid_window_start = 0;
-  // int valid_window_stop = nsamples;
   for (int i = 0; i < nsamples; i++) cfg->peak_trace[i] = 0;
 
   int multiplicity = 0;
@@ -523,13 +521,11 @@ unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int s
 void fsp_dsp_channel_threshold(ChannelThresholdConfig* cfg, int nsamples, int ntraces, unsigned short **traces, unsigned short** theaders) {
   assert(cfg->ntraces <= ntraces);
 
-  // cfg->multiplicity = 0;
   int nfound = 0;
   for (int i = 0; i < cfg->ntraces; i++) {
     int trace_idx = cfg->tracemap[i];
     unsigned short *trace = traces[trace_idx];
     unsigned short baseline = theaders[trace_idx][0];
-    // cfg->max_values[i] = 0;
 
     cfg->max_values[nfound] = fsp_dsp_trace_larger_than(trace, 0, nsamples, nsamples, cfg->thresholds[i] + baseline);
     if (cfg->max_values[nfound]) {
