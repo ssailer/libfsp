@@ -435,8 +435,9 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       break;
     }
 
-    /* Leave the following commented code in for reference, how a mixed stream could be used,
+    /* Leave the following commented code in for reference on how a mixed stream could be used,
        but that requires additional checks for the extension-retrigger detection.
+       For now, RecEvents are just glanced over.
     */
     // case FCIORecEvent: {
     //   fsp_state->timestamp = fcio_time_timestamps2run(state->recevent->timestamp);
