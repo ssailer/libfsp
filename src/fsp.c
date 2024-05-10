@@ -61,19 +61,19 @@ FSPState* FSPOutput(StreamProcessor* processor) {
 
 void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags) {
   processor->enabled_flags.trigger = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %lu\n", flags.is_flagged);
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %llu\n", flags.is_flagged);
 }
 
 void FSPEnableEventFlags(StreamProcessor* processor, EventFlags flags) {
   processor->enabled_flags.event = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %lu\n", flags.is_flagged);
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %llu\n", flags.is_flagged);
 }
 
 void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags) {
   processor->wps_reference_flags_ct = ct_flags;
   processor->wps_reference_flags_hwm = hwm_flags;
   processor->wps_reference_flags_wps = wps_flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %lu ct %lu wps %lu\n", hwm_flags, ct_flags, wps_flags);
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %llu ct %llu wps %llu\n", hwm_flags, ct_flags, wps_flags);
 }
 
 StreamProcessor* FSPCreate(void) {
