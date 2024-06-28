@@ -2,14 +2,12 @@
 
 #include <fcio.h>
 
-typedef struct WPSTriggerList
-{
-  float threshold;
-  int start[FCIOMaxSamples];
-  int stop[FCIOMaxSamples]; // first sample after trigger up is gone
-  float wps_max[FCIOMaxSamples];
-  int size;
-} WPSTriggerList;
+typedef struct {
+    int size;
+    int start[FCIOMaxSamples];
+    int stop[FCIOMaxSamples]; // first sample after trigger up is gone
+    float wps_max[FCIOMaxSamples];
+  } SubEventList;
 
 typedef struct WindowedPeakSumConfig {
   int tracemap_format;
@@ -48,7 +46,7 @@ typedef struct WindowedPeakSumConfig {
   /* testing -> determine the above threshold snippets
       coincidence_window_trigger_list_threshold should be the same as the largest_sum_pe threshold in the calling
   */
-  WPSTriggerList* trigger_list;
+  SubEventList* sub_event_list;
 
   float max_peak_sum_value;
   int max_peak_sum_offset;

@@ -10,9 +10,29 @@
 
 #define FC_MAXTICKS 249999999
 
-typedef struct StreamProcessor {
+typedef struct {
+
+  int hwm_threshold;
+  int hwm_prescale_ratio;
+  int wps_prescale_ratio;
+  int muon_coincidence;
+
+  float relative_wps_threshold;
+  float absolute_wps_threshold;
+  float wps_prescale_rate;
+  float hwm_prescale_rate;
+
+  HWMFlags wps_reference_flags_hwm;
+  CTFlags wps_reference_flags_ct;
+  WPSFlags wps_reference_flags_wps;
+
+  FSPWriteFlags enabled_flags;
   Timestamp pre_trigger_window;
   Timestamp post_trigger_window;
+
+} FSPConfig;
+
+typedef struct StreamProcessor {
 
   int nrecords_read;
   int nrecords_written;
@@ -27,23 +47,10 @@ typedef struct StreamProcessor {
   Timestamp post_trigger_timestamp;
   Timestamp pre_trigger_timestamp;
 
-  float relative_wps_threshold;
-  float absolute_wps_threshold;
-  int hwm_threshold;
-  int muon_coincidence;
-
-  uint64_t wps_reference_flags_ct;
-  uint64_t wps_reference_flags_hwm;
-  uint64_t wps_reference_flags_wps;
-
-  int wps_prescale_ratio;
   int wps_prescale_ready_counter;
-  float wps_prescale_rate;
   Timestamp wps_prescale_timestamp;
 
-  int hwm_prescale_ratio;
   int hwm_prescale_ready_counter;
-  float hwm_prescale_rate;
   Timestamp hwm_prescale_timestamp;
 
   int loglevel;
@@ -52,8 +59,6 @@ typedef struct StreamProcessor {
 
   int checks;
 
-  FSPFlags enabled_flags;
-
   FSPBuffer *buffer;
   Timestamp minimum_buffer_window;
   int minimum_buffer_depth;
@@ -61,6 +66,10 @@ typedef struct StreamProcessor {
   WindowedPeakSumConfig *wps_cfg;
   HardwareMajorityConfig *hwm_cfg;
   ChannelThresholdConfig *ct_cfg;
+
+  FSPState* last_fsp_state;
+
+  FSPConfig config;
 
 } StreamProcessor;
 
