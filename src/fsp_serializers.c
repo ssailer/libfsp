@@ -1,6 +1,7 @@
 #include "fsp_serializers.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 static inline size_t event_flag_2char(char* string, size_t strlen, EventFlags event_flags) {
   const int nflags = 2;
@@ -90,7 +91,7 @@ void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
 
   for (size_t i = 0; i < nfields; i++) cstring[i] = '_';
   size_t curr_offset = 0;
-  cstring[curr_offset++] = fsp_state->write ? 'W' : 'D';
+  cstring[curr_offset++] = fsp_state->write_flags.write ? 'W' : 'D';
 
   switch (fsp_state->stream_tag) {
     case FCIOConfig:
@@ -113,15 +114,15 @@ void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
       break;
   }
 
-  curr_offset += st_flag_2char(&cstring[curr_offset], 7, fsp_state->flags.trigger);
+  curr_offset += st_flag_2char(&cstring[curr_offset], 7, fsp_state->write_flags.trigger);
 
-  curr_offset += event_flag_2char(&cstring[curr_offset], 2, fsp_state->flags.event);
+  curr_offset += event_flag_2char(&cstring[curr_offset], 2, fsp_state->write_flags.event);
 
-  curr_offset += ct_flag_2char(&cstring[curr_offset], 2, fsp_state->flags.ct);
+  curr_offset += ct_flag_2char(&cstring[curr_offset], 2, fsp_state->proc_flags.ct);
 
-  curr_offset += hwm_flag_2char(&cstring[curr_offset], 3, fsp_state->flags.hwm);
+  curr_offset += hwm_flag_2char(&cstring[curr_offset], 3, fsp_state->proc_flags.hwm);
 
-  curr_offset += wps_flag_2char(&cstring[curr_offset], 6, fsp_state->flags.wps);
+  curr_offset += wps_flag_2char(&cstring[curr_offset], 6, fsp_state->proc_flags.wps);
 
   cstring[curr_offset++] = ':';
   for (int i = 0; curr_offset < strlen && i < fsp_state->obs.ct.multiplicity; i++, curr_offset++) {
@@ -130,56 +131,56 @@ void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
   cstring[curr_offset] = '\0';
 }
 
-void FSPFlags2BitField(FSPFlags flags, uint32_t* trigger_field, uint32_t* event_field)
+void FSPFlags2BitField(FSPState* fsp_state, uint32_t* trigger_field, uint32_t* event_field)
 {
   uint32_t tfield = 0;
   uint32_t efield = 0;
 
-  tfield |= ((flags.trigger.hwm_multiplicity & 0x1) << 0);
-  tfield |= ((flags.trigger.hwm_prescaled & 0x1)    << 1);
-  tfield |= ((flags.trigger.wps_abs & 0x1)          << 2);
-  tfield |= ((flags.trigger.wps_rel & 0x1)          << 3);
-  tfield |= ((flags.trigger.wps_prescaled & 0x1)    << 4);
-  tfield |= ((flags.trigger.ct_multiplicity & 0x1)  << 5);
+  tfield |= ((fsp_state->write_flags.trigger.hwm_multiplicity & 0x1) << 0);
+  tfield |= ((fsp_state->write_flags.trigger.hwm_prescaled & 0x1)    << 1);
+  tfield |= ((fsp_state->write_flags.trigger.wps_abs & 0x1)          << 2);
+  tfield |= ((fsp_state->write_flags.trigger.wps_rel & 0x1)          << 3);
+  tfield |= ((fsp_state->write_flags.trigger.wps_prescaled & 0x1)    << 4);
+  tfield |= ((fsp_state->write_flags.trigger.ct_multiplicity & 0x1)  << 5);
 
-  efield |= ((flags.event.is_extended & 0x1)          << 0);
-  efield |= ((flags.event.is_retrigger & 0x1)         << 1);
-  efield |= ((flags.wps.abs_threshold & 0x1)          << 2);
-  efield |= ((flags.wps.rel_threshold & 0x1)          << 3);
-  efield |= ((flags.wps.rel_reference & 0x1)          << 4);
-  efield |= ((flags.wps.rel_pre_window & 0x1)         << 5);
-  efield |= ((flags.wps.rel_post_window & 0x1)        << 6);
-  efield |= ((flags.hwm.multiplicity_threshold & 0x1) << 7);
-  efield |= ((flags.hwm.multiplicity_below & 0x1)     << 8);
-  efield |= ((flags.ct.multiplicity & 0x1)            << 9);
+  efield |= ((fsp_state->write_flags.event.is_extended & 0x1)          << 0);
+  efield |= ((fsp_state->write_flags.event.is_retrigger & 0x1)         << 1);
+  efield |= ((fsp_state->proc_flags.wps.abs_threshold & 0x1)          << 2);
+  efield |= ((fsp_state->proc_flags.wps.rel_threshold & 0x1)          << 3);
+  efield |= ((fsp_state->proc_flags.wps.rel_reference & 0x1)          << 4);
+  efield |= ((fsp_state->proc_flags.wps.rel_pre_window & 0x1)         << 5);
+  efield |= ((fsp_state->proc_flags.wps.rel_post_window & 0x1)        << 6);
+  efield |= ((fsp_state->proc_flags.hwm.multiplicity_threshold & 0x1) << 7);
+  efield |= ((fsp_state->proc_flags.hwm.multiplicity_below & 0x1)     << 8);
+  efield |= ((fsp_state->proc_flags.ct.multiplicity & 0x1)            << 9);
   
   *trigger_field = tfield;
   *event_field = efield;
 }
 
-void FSPBitField2Flags(FSPFlags* flags, uint32_t trigger_field, uint32_t event_field)
+void FSPBitField2Flags(FSPState* fsp_state, uint32_t trigger_field, uint32_t event_field)
 {
-  flags->trigger.hwm_multiplicity =  trigger_field & (0x1 << 0);
-  flags->trigger.hwm_prescaled =     trigger_field & (0x1 << 1);
-  flags->trigger.wps_abs =           trigger_field & (0x1 << 2);
-  flags->trigger.wps_rel =           trigger_field & (0x1 << 3);
-  flags->trigger.wps_prescaled =     trigger_field & (0x1 << 4);
-  flags->trigger.ct_multiplicity =   trigger_field & (0x1 << 5);
+  fsp_state->write_flags.trigger.hwm_multiplicity =  trigger_field & (0x1 << 0);
+  fsp_state->write_flags.trigger.hwm_prescaled =     trigger_field & (0x1 << 1);
+  fsp_state->write_flags.trigger.wps_abs =           trigger_field & (0x1 << 2);
+  fsp_state->write_flags.trigger.wps_rel =           trigger_field & (0x1 << 3);
+  fsp_state->write_flags.trigger.wps_prescaled =     trigger_field & (0x1 << 4);
+  fsp_state->write_flags.trigger.ct_multiplicity =   trigger_field & (0x1 << 5);
 
-  flags->event.is_extended =           event_field & (0x1 << 0);
-  flags->event.is_retrigger =          event_field & (0x1 << 1);
-  flags->wps.abs_threshold =           event_field & (0x1 << 2);
-  flags->wps.rel_threshold =           event_field & (0x1 << 3);
-  flags->wps.rel_reference =           event_field & (0x1 << 4);
-  flags->wps.rel_pre_window =          event_field & (0x1 << 5);
-  flags->wps.rel_post_window =         event_field & (0x1 << 6);
-  flags->hwm.multiplicity_threshold =  event_field & (0x1 << 7);
-  flags->hwm.multiplicity_below =      event_field & (0x1 << 8);
-  flags->ct.multiplicity =             event_field & (0x1 << 9);
+  fsp_state->write_flags.event.is_extended =           event_field & (0x1 << 0);
+  fsp_state->write_flags.event.is_retrigger =          event_field & (0x1 << 1);
+  fsp_state->proc_flags.wps.abs_threshold =           event_field & (0x1 << 2);
+  fsp_state->proc_flags.wps.rel_threshold =           event_field & (0x1 << 3);
+  fsp_state->proc_flags.wps.rel_reference =           event_field & (0x1 << 4);
+  fsp_state->proc_flags.wps.rel_pre_window =          event_field & (0x1 << 5);
+  fsp_state->proc_flags.wps.rel_post_window =         event_field & (0x1 << 6);
+  fsp_state->proc_flags.hwm.multiplicity_threshold =  event_field & (0x1 << 7);
+  fsp_state->proc_flags.hwm.multiplicity_below =      event_field & (0x1 << 8);
+  fsp_state->proc_flags.ct.multiplicity =             event_field & (0x1 << 9);
 }
 
 
-void FSPFlags2BitString(FSPFlags flags, size_t strlen, char* trigger_string, char* event_string)
+void FSPFlags2BitString(FSPState* fsp_state, size_t strlen, char* trigger_string, char* event_string)
 {
   assert(strlen >= 20);
 
@@ -187,26 +188,182 @@ void FSPFlags2BitString(FSPFlags flags, size_t strlen, char* trigger_string, cha
   char* evtstring = &event_string[12];
   
   *trgstring-- = 0;
-  *trgstring-- = (flags.trigger.hwm_multiplicity & 0x1) ? '1' : '0';
-  *trgstring-- = (flags.trigger.hwm_prescaled & 0x1) ? '1' : '0';
-  *trgstring-- = (flags.trigger.wps_abs & 0x1) ? '1' : '0';
-  *trgstring-- = (flags.trigger.wps_rel & 0x1) ? '1' : '0';
-  *trgstring-- = (flags.trigger.wps_prescaled & 0x1) ? '1' : '0';
-  *trgstring-- = (flags.trigger.ct_multiplicity & 0x1) ? '1' : '0';
+  *trgstring-- = (fsp_state->write_flags.trigger.hwm_multiplicity & 0x1) ? '1' : '0';
+  *trgstring-- = (fsp_state->write_flags.trigger.hwm_prescaled & 0x1) ? '1' : '0';
+  *trgstring-- = (fsp_state->write_flags.trigger.wps_abs & 0x1) ? '1' : '0';
+  *trgstring-- = (fsp_state->write_flags.trigger.wps_rel & 0x1) ? '1' : '0';
+  *trgstring-- = (fsp_state->write_flags.trigger.wps_prescaled & 0x1) ? '1' : '0';
+  *trgstring-- = (fsp_state->write_flags.trigger.ct_multiplicity & 0x1) ? '1' : '0';
   *trgstring-- = 'b';
   *trgstring = '0';
 
   *evtstring-- = 0;
-  *evtstring-- = (flags.event.is_extended & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.event.is_retrigger & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.wps.abs_threshold & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.wps.rel_threshold & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.wps.rel_reference & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.wps.rel_pre_window & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.wps.rel_post_window & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.hwm.multiplicity_threshold & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.hwm.multiplicity_below & 0x1) ? '1' : '0';
-  *evtstring-- = (flags.ct.multiplicity & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->write_flags.event.is_extended & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->write_flags.event.is_retrigger & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.wps.abs_threshold & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.wps.rel_threshold & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.wps.rel_reference & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.wps.rel_pre_window & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.wps.rel_post_window & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.hwm.multiplicity_threshold & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.hwm.multiplicity_below & 0x1) ? '1' : '0';
+  *evtstring-- = (fsp_state->proc_flags.ct.multiplicity & 0x1) ? '1' : '0';
   *evtstring-- = 'b';
   *evtstring-- = '0';
+}
+
+int FCIOPutFSPConfig(FCIOStream output, StreamProcessor* processor) {
+
+  FCIOWriteMessage(output, FCIOFSPConfig);
+
+  /* StreamProcessor config */
+  FCIOWrite(output, sizeof(processor->config), &processor->config);
+
+  /* FSPBuffer config */
+  FCIOWriteInt(output, processor->buffer->max_states);
+  FCIOWrite(output, sizeof(processor->buffer->buffer_window.seconds), &processor->buffer->buffer_window.seconds);
+  FCIOWrite(output, sizeof(processor->buffer->buffer_window.nanoseconds), &processor->buffer->buffer_window.nanoseconds);
+
+  /* HWM config */
+  FCIOWriteInts(output, processor->hwm_cfg->ntraces, processor->hwm_cfg->tracemap);
+  FCIOWriteUShorts(output, processor->hwm_cfg->ntraces, processor->hwm_cfg->fpga_energy_threshold_adc);
+
+  /* CT config */
+  FCIOWriteInts(output, processor->ct_cfg->ntraces, processor->ct_cfg->tracemap);
+  FCIOWriteUShorts(output, processor->ct_cfg->ntraces, processor->ct_cfg->thresholds);
+  FCIOWrite(output, processor->ct_cfg->ntraces, processor->ct_cfg->labels);
+
+  /* WPS config */
+  FCIOWriteInt(output, processor->wps_cfg->apply_gain_scaling);
+  FCIOWriteInt(output, processor->wps_cfg->sum_window_start_sample);
+  FCIOWriteInt(output, processor->wps_cfg->sum_window_stop_sample);
+  FCIOWriteFloat(output, processor->wps_cfg->coincidence_threshold);
+
+  FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->tracemap);
+  FCIOWriteFloats(output, processor->wps_cfg->ntraces, processor->wps_cfg->gains);
+  FCIOWriteFloats(output, processor->wps_cfg->ntraces, processor->wps_cfg->thresholds);
+  FCIOWriteFloats(output, processor->wps_cfg->ntraces, processor->wps_cfg->lowpass);
+  FCIOWriteFloats(output, processor->wps_cfg->ntraces, processor->wps_cfg->shaping_widths);
+
+  FCIOWriteInt(output, processor->wps_cfg->dsp_pre_max_samples);
+  FCIOWriteInt(output, processor->wps_cfg->dsp_pre_max_samples);
+  FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_pre_samples);
+  FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_post_samples);
+  FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_start_sample);
+  FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_stop_sample);
+
+
+  return FCIOFlush(output);
+}
+
+int FCIOPutFSPEvent(FCIOStream output, FSPState* fsp_state) {
+
+  FCIOWriteMessage(output, FCIOFSPEvent);
+  FCIOWrite(output, sizeof(fsp_state->write_flags), &fsp_state->write_flags);
+  FCIOWrite(output, sizeof(fsp_state->proc_flags), &fsp_state->proc_flags);
+
+  FCIOWrite(output, sizeof(fsp_state->obs.evt), &fsp_state->obs.evt);
+  FCIOWrite(output, sizeof(fsp_state->obs.hwm), &fsp_state->obs.hwm);
+  FCIOWrite(output, sizeof(fsp_state->obs.wps), &fsp_state->obs.wps);
+
+  FCIOWriteInts(output, fsp_state->obs.ct.multiplicity, fsp_state->obs.ct.trace_idx);
+  FCIOWriteUShorts(output, fsp_state->obs.ct.multiplicity, fsp_state->obs.ct.max);
+
+  FCIOWriteInts(output, fsp_state->obs.sub_event_list.size, fsp_state->obs.sub_event_list.start);
+  FCIOWriteInts(output, fsp_state->obs.sub_event_list.size, fsp_state->obs.sub_event_list.stop);
+  FCIOWriteFloats(output, fsp_state->obs.sub_event_list.size, fsp_state->obs.sub_event_list.wps_max);
+
+  return FCIOFlush(output);
+}
+
+int FCIOPutFSPStatus(FCIOStream output, StreamProcessor* processor) {
+
+  FCIOWriteMessage(output, FCIOFSPStatus);
+
+  FCIOWrite(output, sizeof(FSPStats), processor->stats);
+
+  return FCIOFlush(output);
+}
+
+int FCIOPutFSP(FCIOStream output, StreamProcessor* processor) {
+
+  if (!output || !processor->last_fsp_state)
+    return 0;
+
+  switch (processor->last_fsp_state->state->last_tag) {
+    case FCIOConfig:
+    return FCIOPutFSPConfig(output, processor);
+
+    case FCIOEvent:
+    case FCIOSparseEvent:
+    case FCIOEventHeader:
+    return FCIOPutFSPEvent(output, processor->last_fsp_state);
+
+    case FCIOStatus:
+    return FCIOPutFSPStatus(output, processor);
+
+    default:
+    return 0;
+  }
+}
+
+void fcio_get_fspconfig(FCIOData* input, StreamProcessor* processor)
+{
+  FCIOStream in = FCIOStreamHandle(input);
+
+  /* StreamProcessor config */
+  FCIORead(in, sizeof(processor->config), &processor->config);
+
+  /* FSPBuffer config */
+  FCIOReadInt(in, processor->buffer->max_states);
+  FCIORead(in, sizeof(processor->buffer->buffer_window.seconds), &processor->buffer->buffer_window.seconds);
+  FCIORead(in, sizeof(processor->buffer->buffer_window.nanoseconds), &processor->buffer->buffer_window.nanoseconds);
+
+  /* HWM config */
+  FCIOReadInts(in, FCIOMaxChannels, processor->hwm_cfg->tracemap);
+  FCIOReadUShorts(in, FCIOMaxChannels, processor->hwm_cfg->fpga_energy_threshold_adc);
+
+  /* CT config */
+  FCIOReadInts(in, FCIOMaxChannels, processor->ct_cfg->tracemap);
+  FCIOReadUShorts(in, FCIOMaxChannels, processor->ct_cfg->thresholds);
+  FCIORead(in, FCIOMaxChannels, processor->ct_cfg->labels);
+
+  /* WPS config */
+  FCIOReadInt(in, processor->wps_cfg->apply_gain_scaling);
+  FCIOReadInt(in, processor->wps_cfg->sum_window_start_sample);
+  FCIOReadInt(in, processor->wps_cfg->sum_window_stop_sample);
+  FCIOReadFloat(in, processor->wps_cfg->coincidence_threshold);
+
+  FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->tracemap);
+  FCIOReadFloats(in, FCIOMaxChannels, processor->wps_cfg->gains);
+  FCIOReadFloats(in, FCIOMaxChannels, processor->wps_cfg->thresholds);
+  FCIOReadFloats(in, FCIOMaxChannels, processor->wps_cfg->lowpass);
+  FCIOReadFloats(in, FCIOMaxChannels, processor->wps_cfg->shaping_widths);
+
+  FCIOReadInt(in, processor->wps_cfg->dsp_pre_max_samples);
+  FCIOReadInt(in, processor->wps_cfg->dsp_pre_max_samples);
+  FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_pre_samples);
+  FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_post_samples);
+  FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_start_sample);
+  FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_stop_sample);
+}
+
+void fcio_get_fspevent(FCIOData* input, FSPState* fsp_state) {
+
+  FCIOStream in = FCIOStreamHandle(input);
+
+  FCIORead(in, sizeof(fsp_state->write_flags), &fsp_state->write_flags);
+  FCIORead(in, sizeof(fsp_state->proc_flags), &fsp_state->proc_flags);
+
+  FCIORead(in, sizeof(fsp_state->obs.evt), &fsp_state->obs.evt);
+  FCIORead(in, sizeof(fsp_state->obs.hwm), &fsp_state->obs.hwm);
+  FCIORead(in, sizeof(fsp_state->obs.wps), &fsp_state->obs.wps);
+
+  fsp_state->obs.ct.multiplicity = FCIOReadInts(in, FCIOMaxChannels, fsp_state->obs.ct.trace_idx)/sizeof(int);
+  FCIOReadUShorts(in, FCIOMaxChannels, fsp_state->obs.ct.max);
+
+  fsp_state->obs.sub_event_list.size = FCIOReadInts(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.start)/sizeof(int);
+  FCIOReadInts(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.stop);
+  FCIOReadFloats(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.wps_max);
+
 }

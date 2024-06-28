@@ -38,30 +38,30 @@ static inline void fsp_derive_triggerflags(StreamProcessor* processor, FSPState*
   /*
     This function calculates the trigger flag fields from the individual processor flags
   */
-  if (processor->enabled_flags.trigger.hwm_multiplicity && fsp_state->flags.hwm.multiplicity_threshold)
-    fsp_state->flags.trigger.hwm_multiplicity = 1;
+  if (processor->config.enabled_flags.trigger.hwm_multiplicity && fsp_state->proc_flags.hwm.multiplicity_threshold)
+    fsp_state->write_flags.trigger.hwm_multiplicity = 1;
 
-  if (processor->enabled_flags.trigger.hwm_prescaled && fsp_state->flags.hwm.prescaled) {
-    fsp_state->flags.trigger.hwm_multiplicity = 0;
-    fsp_state->flags.trigger.hwm_prescaled = 1;
+  if (processor->config.enabled_flags.trigger.hwm_prescaled && fsp_state->proc_flags.hwm.prescaled) {
+    fsp_state->write_flags.trigger.hwm_multiplicity = 0;
+    fsp_state->write_flags.trigger.hwm_prescaled = 1;
   }
 
-  if (processor->enabled_flags.trigger.ct_multiplicity && fsp_state->flags.ct.multiplicity)
-    fsp_state->flags.trigger.ct_multiplicity = 1;
+  if (processor->config.enabled_flags.trigger.ct_multiplicity && fsp_state->proc_flags.ct.multiplicity)
+    fsp_state->write_flags.trigger.ct_multiplicity = 1;
 
-  if (processor->enabled_flags.trigger.wps_abs && fsp_state->flags.wps.abs_threshold)
-    fsp_state->flags.trigger.wps_abs = 1;
+  if (processor->config.enabled_flags.trigger.wps_abs && fsp_state->proc_flags.wps.abs_threshold)
+    fsp_state->write_flags.trigger.wps_abs = 1;
 
-  if (processor->enabled_flags.trigger.wps_rel && fsp_state->flags.wps.rel_threshold)
-    if (fsp_state->flags.wps.rel_pre_window || fsp_state->flags.wps.rel_post_window) {
-      fsp_state->flags.trigger.wps_rel = 1;
+  if (processor->config.enabled_flags.trigger.wps_rel && fsp_state->proc_flags.wps.rel_threshold)
+    if (fsp_state->proc_flags.wps.rel_pre_window || fsp_state->proc_flags.wps.rel_post_window) {
+      fsp_state->write_flags.trigger.wps_rel = 1;
     }
 
-  if (processor->enabled_flags.trigger.hwm_prescaled && fsp_state->flags.hwm.prescaled)
-    fsp_state->flags.trigger.hwm_prescaled = 1;
+  if (processor->config.enabled_flags.trigger.hwm_prescaled && fsp_state->proc_flags.hwm.prescaled)
+    fsp_state->write_flags.trigger.hwm_prescaled = 1;
 
-  if (processor->enabled_flags.trigger.wps_prescaled && fsp_state->flags.wps.prescaled)
-    fsp_state->flags.trigger.wps_prescaled = 1;
+  if (processor->config.enabled_flags.trigger.wps_prescaled && fsp_state->proc_flags.wps.prescaled)
+    fsp_state->write_flags.trigger.wps_prescaled = 1;
 }
 
 static inline unsigned int fsp_write_decision(FSPState* fsp_state) {
@@ -69,9 +69,9 @@ static inline unsigned int fsp_write_decision(FSPState* fsp_state) {
   // if ((fsp_state->state->last_tag != FCIOEvent))
     return 1;
 
-  // if ((fsp_state->flags.event.is_flagged & processor->enabled_flags.event.is_flagged) ||
-  //     (fsp_state->flags.trigger.is_flagged & processor->enabled_flags.trigger.is_flagged))
-  if (fsp_state->flags.event.is_flagged || fsp_state->flags.trigger.is_flagged)
+  // if ((fsp_state->proc_flags.event.is_flagged & processor->config.enabled_flags.event.is_flagged) ||
+  //     (fsp_state->write_flags.trigger.is_flagged & processor->config.enabled_flags.trigger.is_flagged))
+  if (fsp_state->write_flags.event.is_flagged || fsp_state->write_flags.trigger.is_flagged)
     return 1;
 
   return 0;
@@ -85,6 +85,7 @@ FSPState* FSPOutput(StreamProcessor* processor) {
   if (!processor) return NULL;
 
   FSPState* fsp_state = FSPBufferFetchState(processor->buffer);
+  processor->last_fsp_state = fsp_state;
 
   if (!fsp_state) {
     return NULL;
@@ -92,9 +93,9 @@ FSPState* FSPOutput(StreamProcessor* processor) {
 
   fsp_derive_triggerflags(processor, fsp_state);
 
-  fsp_state->write = fsp_write_decision(fsp_state);
+  fsp_state->write_flags.write = fsp_write_decision(fsp_state);
 
-  if (fsp_state->write) {
+  if (fsp_state->write_flags.write) {
     processor->nrecords_written++;
     if ((fsp_state->state->last_tag == FCIOEvent) || (fsp_state->state->last_tag == FCIOSparseEvent))
       processor->nevents_written++;
@@ -109,20 +110,20 @@ FSPState* FSPOutput(StreamProcessor* processor) {
 }
 
 void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags) {
-  processor->enabled_flags.trigger = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %llu\n", flags.is_flagged);
+  processor->config.enabled_flags.trigger = flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %llu\n", (unsigned long long)flags.is_flagged);
 }
 
 void FSPEnableEventFlags(StreamProcessor* processor, EventFlags flags) {
-  processor->enabled_flags.event = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %llu\n", flags.is_flagged);
+  processor->config.enabled_flags.event = flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %llu\n", (unsigned long long)flags.is_flagged);
 }
 
 void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags) {
-  processor->wps_reference_flags_ct = ct_flags;
-  processor->wps_reference_flags_hwm = hwm_flags;
-  processor->wps_reference_flags_wps = wps_flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %llu ct %llu wps %llu\n", hwm_flags, ct_flags, wps_flags);
+  processor->config.wps_reference_flags_ct.is_flagged = ct_flags;
+  processor->config.wps_reference_flags_hwm.is_flagged = hwm_flags;
+  processor->config.wps_reference_flags_wps.is_flagged = wps_flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %llu ct %llu wps %llu\n", (unsigned long long)hwm_flags, (unsigned long long)ct_flags, (unsigned long long)wps_flags);
 }
 
 StreamProcessor* FSPCreate(void) {
@@ -167,9 +168,9 @@ int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
   }
   if (buffer_depth < processor->minimum_buffer_depth) buffer_depth = processor->minimum_buffer_depth;
 
-  Timestamp buffer_window = timestamp_greater(processor->minimum_buffer_window, processor->pre_trigger_window)
+  Timestamp buffer_window = timestamp_greater(processor->minimum_buffer_window, processor->config.pre_trigger_window)
                                 ? processor->minimum_buffer_window
-                                : processor->pre_trigger_window;
+                                : processor->config.pre_trigger_window;
   processor->buffer = FSPBufferCreate(buffer_depth, buffer_window);
   if (!processor->buffer) {
     if (processor->loglevel) fprintf(stderr, "ERROR FSPSetBufferSize: Couldn't allocate FSPBuffer.\n");

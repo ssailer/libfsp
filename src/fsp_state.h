@@ -58,18 +58,25 @@ typedef union CTFlags {
   uint64_t is_flagged;
 } CTFlags;
 
-typedef struct FSPFlags {
-
+typedef struct FSPWriteFlags {
+  /* write flags */
   EventFlags event;
   STFlags trigger;
 
-  WPSFlags wps;
+  int write;
+} FSPWriteFlags;
+
+typedef struct FSPProcessorFlags {
+
+  /* processor flags */
   HWMFlags hwm;
+  WPSFlags wps;
   CTFlags ct;
 
-} FSPFlags;
+} FSPProcessorFlags;
 
 typedef struct FSPObervables {
+
   // Windows Peak Sum
   struct wps_obs {
     float max_value; // what is the maximum PE within the integration windows
@@ -79,9 +86,8 @@ typedef struct FSPObervables {
     int max_single_peak_offset;  // which sample contains this peak
 
     /* sub triggerlist */
-    WPSTriggerList trigger_list;
+    // WPSTriggerList trigger_list;
   } wps;
-
 
   // FPGA Majority
   struct hwm_obs {
@@ -94,15 +100,18 @@ typedef struct FSPObervables {
   // Channel Threshold 
   struct ct_obs {
     int multiplicity; // how many channels were above the threshold
-    unsigned short max[FCIOMaxChannels]; // the maximum per channel
     int trace_idx[FCIOMaxChannels]; // the corresponding fcio trace index
+    unsigned short max[FCIOMaxChannels]; // the maximum per channel
     const char* label[FCIOMaxChannels]; // the name of the channel given during setup
 
   } ct;
 
+  // Event Stream
   struct event_obs {
     int nextension; // if we found re-triggers how many events are consecutive from then on. the event with the extension flag carries the total number
   } evt;
+
+  SubEventList sub_event_list;
 
 } FSPObservables;
 
@@ -115,11 +124,10 @@ typedef struct FSPState {
   int in_buffer;
   int stream_tag;
 
+  /* condense observables into flags */
+  FSPWriteFlags write_flags;
+  FSPProcessorFlags proc_flags;
   /* calculate observables if event */
   FSPObservables obs;
-  /* condense observables into flags */
-  FSPFlags flags;
-  /* final write decision based on enabled flags */
-  int write;
 
 } FSPState;
