@@ -16,3 +16,5 @@ int FCIOPutFSPStatus(FCIOStream output, StreamProcessor* processor);
 int FCIOPutFSP(FCIOStream output, StreamProcessor* processor);
 
 void FCIOGetFSPEvent(FCIOData* input, FSPState* fsp_state);
+void FCIOGetFSPConfig(FCIOData* input, StreamProcessor* processor);
+void FCIOGetFSPStatus(FCIOData* input, StreamProcessor* processor);

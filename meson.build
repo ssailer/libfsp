@@ -38,6 +38,11 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
+fsp_ser_sources = files(
+  'src/fsp_serializers.c'
+)
+fsp_ser_dep = declare_dependency(include_directories : fsp_inc, sources : fsp_ser_sources, dependencies : [fcio_dep, m_dep])
+
 install_headers(
   'src/fsp.h',
   'src/fsp_processor.h',
