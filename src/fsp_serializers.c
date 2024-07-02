@@ -307,10 +307,8 @@ int FCIOPutFSP(FCIOStream output, StreamProcessor* processor) {
   }
 }
 
-void fcio_get_fspconfig(FCIOData* input, StreamProcessor* processor)
+static inline void fcio_get_fspconfig(FCIOStream in, StreamProcessor* processor)
 {
-  FCIOStream in = FCIOStreamHandle(input);
-
   /* StreamProcessor config */
   FCIORead(in, sizeof(processor->config), &processor->config);
 
@@ -348,9 +346,15 @@ void fcio_get_fspconfig(FCIOData* input, StreamProcessor* processor)
   FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_stop_sample);
 }
 
-void fcio_get_fspevent(FCIOData* input, FSPState* fsp_state) {
-
+void FCIOGetFSPConfig(FCIOData* input, StreamProcessor* processor)
+{
   FCIOStream in = FCIOStreamHandle(input);
+
+  fcio_get_fspconfig(in, processor);
+}
+
+static inline void fcio_get_fspevent(FCIOStream in, FSPState* fsp_state) {
+
 
   FCIORead(in, sizeof(fsp_state->write_flags), &fsp_state->write_flags);
   FCIORead(in, sizeof(fsp_state->proc_flags), &fsp_state->proc_flags);
@@ -366,4 +370,24 @@ void fcio_get_fspevent(FCIOData* input, FSPState* fsp_state) {
   FCIOReadInts(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.stop);
   FCIOReadFloats(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.wps_max);
 
+}
+
+void FCIOGetFSPEvent(FCIOData* input, FSPState* fsp_state)
+{
+  FCIOStream in = FCIOStreamHandle(input);
+
+  fcio_get_fspevent(in, fsp_state);
+}
+
+static inline void fcio_get_fspstatus(FCIOStream in, StreamProcessor* processor) {
+
+  FCIORead(in, sizeof(FSPStatus), processor->stats);
+}
+
+
+void FCIOGetFSPStatus(FCIOData* input, StreamProcessor* processor)
+{
+  FCIOStream in = FCIOStreamHandle(input);
+
+  fcio_get_fspstatus(in, processor);
 }
