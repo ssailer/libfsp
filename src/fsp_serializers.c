@@ -381,7 +381,7 @@ void FCIOGetFSPEvent(FCIOData* input, FSPState* fsp_state)
 
 static inline void fcio_get_fspstatus(FCIOStream in, StreamProcessor* processor) {
 
-  FCIORead(in, sizeof(FSPStatus), processor->stats);
+  FCIORead(in, sizeof(FSPStats), processor->stats);
 }
 
 
