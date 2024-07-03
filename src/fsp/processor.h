@@ -2,7 +2,6 @@
 
 #include "fsp/timestamps.h"
 #include "fsp/flags.h"
-#include "fsp/state.h"
 #include "fsp/stats.h"
 #include "fsp/buffer.h"
 
@@ -64,8 +63,6 @@ typedef struct StreamProcessor {
   WindowedPeakSumConfig *wps_cfg;
   HardwareMajorityConfig *hwm_cfg;
   ChannelThresholdConfig *ct_cfg;
-
-  FSPState* last_fsp_state;
 
   FSPConfig config;
 

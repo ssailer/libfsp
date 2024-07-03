@@ -289,17 +289,17 @@ int FCIOPutFSPStatus(FCIOStream output, StreamProcessor* processor) {
 
 int FCIOPutFSP(FCIOStream output, StreamProcessor* processor) {
 
-  if (!output || !processor->last_fsp_state)
+  if (!output || !processor->buffer->last_fsp_state)
     return 0;
 
-  switch (processor->last_fsp_state->state->last_tag) {
+  switch (processor->buffer->last_fsp_state->state->last_tag) {
     case FCIOConfig:
     return FCIOPutFSPConfig(output, processor);
 
     case FCIOEvent:
     case FCIOSparseEvent:
     case FCIOEventHeader:
-    return FCIOPutFSPEvent(output, processor->last_fsp_state);
+    return FCIOPutFSPEvent(output, processor->buffer->last_fsp_state);
 
     case FCIOStatus:
     return FCIOPutFSPStatus(output, processor);
