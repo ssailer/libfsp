@@ -50,9 +50,9 @@ install_headers(
   'src/fsp/stats.h',
   'src/fsp/flags.h',
   'src/fsp/obs.h',
+  'src/fsp/tracemap.h',
   'src/fsp/io.h',
   'src/fsp_l200.h',
-  'src/fsp_channelmaps.h',
   'src/fsp.h',
 )
 
