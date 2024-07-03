@@ -7,8 +7,6 @@
 
 #include <fcio.h>
 
-/*
-
 static inline int load_sipm_tracemap(int max_channels, int *channels) {
   const int last_card = 10;
   const int max_card_slots = 6;  // 16-bit firmware
@@ -31,28 +29,22 @@ static inline int load_sipm_tracemap(int max_channels, int *channels) {
 static inline int load_hpge_tracemap(int max_channels, int *channels) {
   const int last_card = 10;
   const int max_card_slots = 6;  // 16-bit firmware
-  const int baseaddress = 0x300;
+  const int baseaddresses[] = {0x300, 0x400};
+  const int max_crates = sizeof(baseaddresses)/sizeof(*baseaddresses);
 
   int nchannels = 0;
-  for (int i = 1; i <= last_card; i++) {
-    int card_address = baseaddress + i * 0x10;  // 0x10 == 16
-    for (int j = 0; j < max_card_slots && nchannels < max_channels; j++) {
-      channels[nchannels++] = (card_address << 16) + j;
-    }
-  }
-
-  const int baseaddress = 0x400;
-  for (int i = 1; i <= last_card; i++) {
-    int card_address = baseaddress + i * 0x10;  // 0x10 == 16
-    for (int j = 0; j < max_card_slots && nchannels < max_channels; j++) {
-      channels[nchannels++] = (card_address << 16) + j;
+  for (int k = 0; k < max_crates; k++) {
+    const int baseaddress = baseaddresses[k];
+    for (int i = 1; i <= last_card; i++) {
+      int card_address = baseaddress + i * 0x10;  // 0x10 == 16
+      for (int j = 0; j < max_card_slots && nchannels < max_channels; j++) {
+        channels[nchannels++] = (card_address << 16) + j;
+      }
     }
   }
 
   return nchannels;
 }
-
-*/
 
 int FSP_L200_SetAuxParameters(StreamProcessor *processor, FSPTraceFormat format, int digital_pulser_channel,
                         int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,
