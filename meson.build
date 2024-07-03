@@ -25,7 +25,7 @@ fsp_sources = files(
   'src/fsp/timestamps.c',
   'src/fsp/io.c',
   'src/fsp/record_processor.c',
-  'src/fsp/stream_processor.c',
+  'src/fsp/processor.c',
   'src/fsp_l200.c',
 )
 

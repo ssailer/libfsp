@@ -83,6 +83,8 @@ FSPState *FSPBufferFetchState(FSPBuffer *buffer) {
     // record is handed off, forget about it
     fsp_state->in_buffer = 0;
 
+    buffer->last_fsp_state = fsp_state;
+
     return fsp_state;
   }
 

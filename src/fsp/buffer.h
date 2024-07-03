@@ -18,6 +18,9 @@ typedef struct FSPBuffer {
   Timestamp buffer_timestamp;
   Timestamp buffer_window;
 
+  // contains the last state return from FSPBufferFetchState
+  FSPState *last_fsp_state;
+
 } FSPBuffer;
 
 FSPBuffer *FSPBufferCreate(unsigned int buffer_depth, Timestamp buffer_window);

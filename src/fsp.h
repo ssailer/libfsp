@@ -1,17 +1,12 @@
 #pragma once
 
-#include "fsp/state.h"
-#include "fsp/stats.h"
-#include "fsp/flags.h"
-
-#include "fsp_channelmaps.h"
-#include "fsp_l200.h"
 
 #include <stdint.h>
 #include <stddef.h>
 
 #include <fcio.h>
 
+#include "fsp/flags.h"
 #include "fsp/processor.h"
 
 

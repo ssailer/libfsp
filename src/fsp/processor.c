@@ -5,10 +5,95 @@
 #include <fcio.h>
 #include <time_utils.h>
 
-#include "fsp/record_processor.h"
-#include "fsp/processor.h"
+#include "record_processor.h"
+#include "processor.h"
 
-int FSPInput(StreamProcessor* processor, FCIOState* state) {
+
+void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags)
+{
+  processor->config.enabled_flags.trigger = flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %llu\n", (unsigned long long)flags.is_flagged);
+}
+
+void FSPEnableEventFlags(StreamProcessor* processor, EventFlags flags)
+{
+  processor->config.enabled_flags.event = flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %llu\n", (unsigned long long)flags.is_flagged);
+}
+
+void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags)
+{
+  processor->config.wps_reference_flags_ct.is_flagged = ct_flags;
+  processor->config.wps_reference_flags_hwm.is_flagged = hwm_flags;
+  processor->config.wps_reference_flags_wps.is_flagged = wps_flags;
+  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %llu ct %llu wps %llu\n", (unsigned long long)hwm_flags, (unsigned long long)ct_flags, (unsigned long long)wps_flags);
+}
+
+void FSPSetLogLevel(StreamProcessor* processor, int loglevel)
+{
+  processor->loglevel = loglevel;
+}
+
+void FSPSetLogTime(StreamProcessor* processor, double log_time)
+{
+  processor->stats->log_time = log_time;
+}
+
+int FSPFlush(StreamProcessor* processor)
+{
+  if (!processor) return 0;
+
+  return FSPBufferFlush(processor->buffer);
+}
+
+int FSPFreeStates(StreamProcessor* processor)
+{
+  if (!processor) return 0;
+
+  return processor->buffer->max_states - processor->buffer->fill_level;
+}
+
+StreamProcessor* FSPCreate(void)
+{
+  StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
+
+  processor->stats = calloc(1, sizeof(FSPStats));
+
+  processor->minimum_buffer_window.seconds = 0;
+  processor->minimum_buffer_window.nanoseconds =
+      (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
+  processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
+  processor->stats->start_time = 0.0;    // reset, actual start time happens with the first record insertion.
+  processor->hwm_prescale_timestamp.seconds = -1; // will init when it's needed
+  processor->wps_prescale_timestamp.seconds = -1; // will init when it's needed
+
+  processor->hwm_prescale_ready_counter = 0; // start counters
+  processor->wps_prescale_ready_counter = 0; // start counters
+
+  /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
+  FSPEnableEventFlags(processor, (EventFlags){ .is_retrigger = 1, .is_extended = 1});
+  FSPEnableTriggerFlags(processor, (STFlags){ .hwm_multiplicity = 1, .hwm_prescaled = 1, .wps_abs = 1, .wps_rel = 1, .wps_prescaled = 1, .ct_multiplicity = 1} );
+  HWMFlags ref_hwm = {0};
+  ref_hwm.multiplicity_threshold = 1;
+  CTFlags ref_ct = {0};
+  WPSFlags ref_wps = {0};
+  FSPSetWPSReferenceFlag(processor, ref_hwm.is_flagged, ref_ct.is_flagged, ref_wps.is_flagged);
+
+  return processor;
+}
+
+void FSPDestroy(StreamProcessor* processor)
+{
+  FSPBufferDestroy(processor->buffer);
+  free(processor->stats);
+  free(processor->hwm_cfg);
+  free(processor->wps_cfg);
+  free(processor->ct_cfg);
+  free(processor);
+}
+
+int FSPInput(StreamProcessor* processor, FCIOState* state)
+{
   if (!processor || !state) return 0;
 
   FSPState* fsp_state = FSPBufferPeekState(processor->buffer);
@@ -74,11 +159,11 @@ static inline uint32_t fsp_write_decision(FSPState* fsp_state) {
   return 0;
 }
 
-FSPState* FSPOutput(StreamProcessor* processor) {
+FSPState* FSPOutput(StreamProcessor* processor)
+{
   if (!processor) return NULL;
 
   FSPState* fsp_state = FSPBufferFetchState(processor->buffer);
-  processor->last_fsp_state = fsp_state;
 
   if (!fsp_state) {
     return NULL;
@@ -102,59 +187,6 @@ FSPState* FSPOutput(StreamProcessor* processor) {
   return fsp_state;
 }
 
-void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags) {
-  processor->config.enabled_flags.trigger = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableTriggerFlags: %llu\n", (unsigned long long)flags.is_flagged);
-}
-
-void FSPEnableEventFlags(StreamProcessor* processor, EventFlags flags) {
-  processor->config.enabled_flags.event = flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %llu\n", (unsigned long long)flags.is_flagged);
-}
-
-void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags) {
-  processor->config.wps_reference_flags_ct.is_flagged = ct_flags;
-  processor->config.wps_reference_flags_hwm.is_flagged = hwm_flags;
-  processor->config.wps_reference_flags_wps.is_flagged = wps_flags;
-  if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %llu ct %llu wps %llu\n", (unsigned long long)hwm_flags, (unsigned long long)ct_flags, (unsigned long long)wps_flags);
-}
-
-StreamProcessor* FSPCreate(void) {
-  StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
-
-  processor->stats = calloc(1, sizeof(FSPStats));
-
-  processor->minimum_buffer_window.seconds = 0;
-  processor->minimum_buffer_window.nanoseconds =
-      (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
-  processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
-  processor->stats->start_time = 0.0;    // reset, actual start time happens with the first record insertion.
-  processor->hwm_prescale_timestamp.seconds = -1; // will init when it's needed
-  processor->wps_prescale_timestamp.seconds = -1; // will init when it's needed
-
-  processor->hwm_prescale_ready_counter = 0; // start counters
-  processor->wps_prescale_ready_counter = 0; // start counters
-
-  /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
-  FSPEnableEventFlags(processor, (EventFlags){ .is_retrigger = 1, .is_extended = 1});
-  FSPEnableTriggerFlags(processor, (STFlags){ .hwm_multiplicity = 1, .hwm_prescaled = 1, .wps_abs = 1, .wps_rel = 1, .wps_prescaled = 1, .ct_multiplicity = 1} );
-  HWMFlags ref_hwm = {0};
-  ref_hwm.multiplicity_threshold = 1;
-  CTFlags ref_ct = {0};
-  WPSFlags ref_wps = {0};
-  FSPSetWPSReferenceFlag(processor, ref_hwm.is_flagged, ref_ct.is_flagged, ref_wps.is_flagged);
-
-  return processor;
-}
-
-void FSPSetLogLevel(StreamProcessor* processor, int loglevel) {
-  processor->loglevel = loglevel;
-}
-
-void FSPSetLogTime(StreamProcessor* processor, double log_time) {
-  processor->stats->log_time = log_time;
-}
-
 int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
   if (processor->buffer) {
     FSPBufferDestroy(processor->buffer);
@@ -176,27 +208,6 @@ int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
   return buffer_depth;
 }
 
-void FSPDestroy(StreamProcessor* processor) {
-  FSPBufferDestroy(processor->buffer);
-  free(processor->stats);
-  free(processor->hwm_cfg);
-  free(processor->wps_cfg);
-  free(processor->ct_cfg);
-  free(processor);
-}
-
-int FSPFlush(StreamProcessor* processor) {
-  if (!processor) return 0;
-
-  return FSPBufferFlush(processor->buffer);
-}
-
-int FSPFreeStates(StreamProcessor* processor) {
-  if (!processor) return 0;
-
-  return processor->buffer->max_states - processor->buffer->fill_level;
-}
-
 static inline void fsp_init_stats(StreamProcessor* processor) {
   FSPStats* stats = processor->stats;
   if (stats->start_time == 0.0) {
@@ -216,7 +227,7 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
 
   if (!processor->buffer && FSPSetBufferSize(processor, reader->max_states - 1)) return NULL;
 
-  fsp_init_stats(processor);
+  // fsp_init_stats(processor);
 
   FSPState* fsp_state = NULL;
   FCIOState* state = NULL;
