@@ -1,7 +1,7 @@
 #include "io.h"
 
 #include <assert.h>
-#include <stdio.h>
+#include <stdlib.h>
 
 #include <fcio.h>
 
@@ -233,10 +233,11 @@ int FCIOPutFSPConfig(FCIOStream output, StreamProcessor* processor) {
   /* CT config */
   FCIOWriteInts(output, processor->ct_cfg->ntraces, processor->ct_cfg->tracemap);
   FCIOWriteUShorts(output, processor->ct_cfg->ntraces, processor->ct_cfg->thresholds);
-  FCIOWrite(output, processor->ct_cfg->ntraces, processor->ct_cfg->labels);
+  // FCIOWrite(output, processor->ct_cfg->ntraces, processor->ct_cfg->labels);
 
   /* WPS config */
   FCIOWriteInt(output, processor->wps_cfg->apply_gain_scaling);
+  FCIOWriteInt(output, processor->wps_cfg->coincidence_window);
   FCIOWriteInt(output, processor->wps_cfg->sum_window_start_sample);
   FCIOWriteInt(output, processor->wps_cfg->sum_window_stop_sample);
   FCIOWriteFloat(output, processor->wps_cfg->coincidence_threshold);
@@ -248,7 +249,7 @@ int FCIOPutFSPConfig(FCIOStream output, StreamProcessor* processor) {
   FCIOWriteFloats(output, processor->wps_cfg->ntraces, processor->wps_cfg->shaping_widths);
 
   FCIOWriteInt(output, processor->wps_cfg->dsp_pre_max_samples);
-  FCIOWriteInt(output, processor->wps_cfg->dsp_pre_max_samples);
+  FCIOWriteInt(output, processor->wps_cfg->dsp_post_max_samples);
   FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_pre_samples);
   FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_post_samples);
   FCIOWriteInts(output, processor->wps_cfg->ntraces, processor->wps_cfg->dsp_start_sample);
@@ -326,10 +327,11 @@ static inline void fcio_get_fspconfig(FCIOStream in, StreamProcessor* processor)
   /* CT config */
   FCIOReadInts(in, FCIOMaxChannels, processor->ct_cfg->tracemap);
   FCIOReadUShorts(in, FCIOMaxChannels, processor->ct_cfg->thresholds);
-  FCIORead(in, FCIOMaxChannels, processor->ct_cfg->labels);
+  // FCIORead(in, FCIOMaxChannels, processor->ct_cfg->labels);
 
   /* WPS config */
   FCIOReadInt(in, processor->wps_cfg->apply_gain_scaling);
+  FCIOReadInt(in, processor->wps_cfg->coincidence_window);
   FCIOReadInt(in, processor->wps_cfg->sum_window_start_sample);
   FCIOReadInt(in, processor->wps_cfg->sum_window_stop_sample);
   FCIOReadFloat(in, processor->wps_cfg->coincidence_threshold);
@@ -341,7 +343,7 @@ static inline void fcio_get_fspconfig(FCIOStream in, StreamProcessor* processor)
   FCIOReadFloats(in, FCIOMaxChannels, processor->wps_cfg->shaping_widths);
 
   FCIOReadInt(in, processor->wps_cfg->dsp_pre_max_samples);
-  FCIOReadInt(in, processor->wps_cfg->dsp_pre_max_samples);
+  FCIOReadInt(in, processor->wps_cfg->dsp_post_max_samples);
   FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_pre_samples);
   FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_post_samples);
   FCIOReadInts(in, FCIOMaxChannels, processor->wps_cfg->dsp_start_sample);
@@ -392,4 +394,28 @@ void FCIOGetFSPStatus(FCIOData* input, StreamProcessor* processor)
   FCIOStream in = FCIOStreamHandle(input);
 
   fcio_get_fspstatus(in, processor);
+}
+
+StreamProcessor* FSPCallocStreamProcessor()
+{
+  StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
+
+  processor->stats = calloc(1, sizeof(FSPStats));
+  processor->buffer = calloc(1, sizeof(FSPBuffer));
+
+  processor->wps_cfg = calloc(1, sizeof(WindowedPeakSumConfig));
+  processor->hwm_cfg = calloc(1, sizeof(HardwareMajorityConfig));
+  processor->ct_cfg = calloc(1, sizeof(ChannelThresholdConfig));
+  return processor;
+}
+
+void FSPFreeStreamProcessor(StreamProcessor* processor)
+{
+  free(processor->ct_cfg);
+  free(processor->hwm_cfg);
+  free(processor->wps_cfg);
+  free(processor->buffer);
+  free(processor->stats);
+
+  free(processor);
 }

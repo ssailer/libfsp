@@ -52,19 +52,17 @@ typedef struct StreamProcessor {
   Timestamp hwm_prescale_timestamp;
 
   int loglevel;
-
-  FSPStats* stats;
-
   int checks;
 
-  FSPBuffer *buffer;
+  FSPConfig config;
+
   Timestamp minimum_buffer_window;
   int minimum_buffer_depth;
+  FSPBuffer *buffer;
 
   WindowedPeakSumConfig *wps_cfg;
   HardwareMajorityConfig *hwm_cfg;
   ChannelThresholdConfig *ct_cfg;
-
-  FSPConfig config;
+  FSPStats *stats;
 
 } StreamProcessor;
