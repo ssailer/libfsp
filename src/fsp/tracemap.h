@@ -7,13 +7,13 @@ typedef enum FSPTraceFormat {
   FCIO_TRACE_INDEX_FORMAT = 0,
   FCIO_TRACE_MAP_FORMAT = 1,
   L200_RAWID_FORMAT = 2,
-  FSPChannelFormatUnkown = 3
+  FSPTraceFormatUnkown = 3
 
 } FSPTraceFormat;
 
 static inline int is_known_channelmap_format(FSPTraceFormat format)
 {
-  return (format < FSPChannelFormatUnkown) ? 1 : 0;
+  return (format < FSPTraceFormatUnkown) ? 1 : 0;
 }
 
 static inline const char* channelmap_fmt2str(FSPTraceFormat format)
@@ -32,7 +32,7 @@ static inline const char* channelmap_fmt2str(FSPTraceFormat format)
 
 static inline FSPTraceFormat channelmap_str2fmt(const char* str)
 {
-  FSPTraceFormat ret = FSPChannelFormatUnkown;
+  FSPTraceFormat ret = FSPTraceFormatUnkown;
   if (strncmp(str, "fcio-trace-idx", 14) == 0)
     ret = FCIO_TRACE_INDEX_FORMAT;
   else if (strncmp(str, "fcio-trace-map", 14) == 0)
@@ -40,7 +40,7 @@ static inline FSPTraceFormat channelmap_str2fmt(const char* str)
   else if (strncmp(str, "l200-rawid", 10) == 0)
     ret = L200_RAWID_FORMAT;
   else
-    ret = FSPChannelFormatUnkown;
+    ret = FSPTraceFormatUnkown;
   return ret;
 }
 
