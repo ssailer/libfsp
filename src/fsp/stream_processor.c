@@ -1,12 +1,12 @@
-#include "fsp.h"
-
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#include <fsp_processor.h>
 #include <fcio.h>
 #include <time_utils.h>
+
+#include "fsp/record_processor.h"
+#include "fsp/processor.h"
 
 int FSPInput(StreamProcessor* processor, FCIOState* state) {
   if (!processor || !state) return 0;
@@ -64,22 +64,15 @@ static inline void fsp_derive_triggerflags(StreamProcessor* processor, FSPState*
     fsp_state->write_flags.trigger.wps_prescaled = 1;
 }
 
-static inline unsigned int fsp_write_decision(FSPState* fsp_state) {
+static inline uint32_t fsp_write_decision(FSPState* fsp_state) {
   if ((fsp_state->state->last_tag != FCIOEvent) && (fsp_state->state->last_tag != FCIOSparseEvent))
-  // if ((fsp_state->state->last_tag != FCIOEvent))
     return 1;
 
-  // if ((fsp_state->proc_flags.event.is_flagged & processor->config.enabled_flags.event.is_flagged) ||
-  //     (fsp_state->write_flags.trigger.is_flagged & processor->config.enabled_flags.trigger.is_flagged))
   if (fsp_state->write_flags.event.is_flagged || fsp_state->write_flags.trigger.is_flagged)
     return 1;
 
   return 0;
 }
-
-
-
-
 
 FSPState* FSPOutput(StreamProcessor* processor) {
   if (!processor) return NULL;
@@ -210,9 +203,6 @@ static inline void fsp_init_stats(StreamProcessor* processor) {
     stats->dt_logtime = stats->start_time = elapsed_time(0.0);
   }
 }
-
-
-
 
 FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, int* timedout) {
   /*

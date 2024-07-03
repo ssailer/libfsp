@@ -2,11 +2,6 @@
 
 #include <stdint.h>
 
-#include <fcio.h>
-
-#include <fsp_timestamps.h>
-#include <fsp_dsp.h>
-
 typedef union STFlags {
   struct {
     uint8_t hwm_multiplicity; // the multiplicity threshold has been reached
@@ -63,7 +58,7 @@ typedef struct FSPWriteFlags {
   EventFlags event;
   STFlags trigger;
 
-  int write;
+  uint32_t write;
 } FSPWriteFlags;
 
 typedef struct FSPProcessorFlags {
@@ -74,64 +69,3 @@ typedef struct FSPProcessorFlags {
   CTFlags ct;
 
 } FSPProcessorFlags;
-
-// Windows Peak Sum
-typedef struct wps_obs {
-  float max_value; // what is the maximum PE within the integration windows
-  int max_offset;  // when is the total sum offset reached?
-  int max_multiplicity;  // How many channels did have a peak above thresholds
-  float max_single_peak_value;   // which one was the largest individual peak
-  int max_single_peak_offset;  // which sample contains this peak
-
-  /* sub triggerlist */
-  // WPSTriggerList trigger_list;
-} wps_obs;
-
-// FPGA Majority
-typedef struct hwm_obs {
-  int multiplicity;          // how many channels have fpga_energy > 0
-  unsigned short max_value;  // what is the largest fpga_energy of those
-  unsigned short min_value;  // what is the smallest fpga_energy of those
-
-} hwm_obs;
-
-// Channel Threshold 
-typedef struct ct_obs {
-  int multiplicity; // how many channels were above the threshold
-  int trace_idx[FCIOMaxChannels]; // the corresponding fcio trace index
-  unsigned short max[FCIOMaxChannels]; // the maximum per channel
-  const char* label[FCIOMaxChannels]; // the name of the channel given during setup
-
-} ct_obs;
-
-// Event Stream
-typedef struct evt_obs {
-  int nextension; // if we found re-triggers how many events are consecutive from then on. the event with the extension flag carries the total number
-} evt_obs;
-typedef struct FSPObervables {
-
-  wps_obs wps;
-  hwm_obs hwm;
-  ct_obs ct;
-  evt_obs evt;
-
-  SubEventList sub_event_list;
-
-} FSPObservables;
-
-typedef struct FSPState {
-  /* internal */
-  FCIOState *state;
-  Timestamp timestamp;
-  Timestamp unixstamp;
-  int has_timestamp;
-  int in_buffer;
-  int stream_tag;
-
-  /* condense observables into flags */
-  FSPWriteFlags write_flags;
-  FSPProcessorFlags proc_flags;
-  /* calculate observables if event */
-  FSPObservables obs;
-
-} FSPState;

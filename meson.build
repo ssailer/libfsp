@@ -19,14 +19,14 @@ fcio_dep = dependency('fcio', fallback : ['fcio', 'fcio_dep'])
 
 fsp_inc = include_directories('src')
 fsp_sources = files(
-  'src/fsp_buffer.c',
-  'src/fsp_dsp.c',
+  'src/fsp/buffer.c',
+  'src/fsp/dsp.c',
+  'src/fsp/stats.c',
+  'src/fsp/timestamps.c',
+  'src/fsp/io.c',
+  'src/fsp/record_processor.c',
+  'src/fsp/stream_processor.c',
   'src/fsp_l200.c',
-  'src/fsp_processor.c',
-  'src/fsp_stats.c',
-  'src/fsp_timestamps.c',
-  'src/fsp_serializers.c',
-  'src/fsp.c',
 )
 
 fsp_lib = library('fsp',
@@ -38,20 +38,22 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
-fsp_ser_sources = files(
-  'src/fsp_serializers.c'
+fsp_io_sources = files(
+  'src/fsp/io.c'
 )
-fsp_ser_dep = declare_dependency(include_directories : fsp_inc, sources : fsp_ser_sources, dependencies : [fcio_dep, m_dep])
+fsp_io_dep = declare_dependency(include_directories : fsp_inc, sources : fsp_io_sources, dependencies : [fcio_dep, m_dep])
 
 install_headers(
-  'src/fsp.h',
-  'src/fsp_processor.h',
-  'src/fsp_dsp.h',
-  'src/fsp_state.h',
-  'src/fsp_stats.h',
+  'src/fsp/record_processor.h',
+  'src/fsp/dsp.h',
+  'src/fsp/state.h',
+  'src/fsp/stats.h',
+  'src/fsp/flags.h',
+  'src/fsp/obs.h',
+  'src/fsp/io.h',
   'src/fsp_l200.h',
   'src/fsp_channelmaps.h',
-  'src/fsp_serializers.h',
+  'src/fsp.h',
 )
 
 pkg_mod = import('pkgconfig')
