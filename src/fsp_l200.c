@@ -12,7 +12,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
   if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
-              "ERROR LPPSetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
+              "ERROR FSPSetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
               channelmap_fmt2str(format));
     return 0;
@@ -34,7 +34,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
   ct_cfg->ntraces = 3;
 
   if (processor->loglevel >= 4) {
-    fprintf(stderr, "DEBUG LPPSetAuxParameters\n");
+    fprintf(stderr, "DEBUG FSPSetAuxParameters\n");
     for (int i = 0; i < ct_cfg->ntraces; i++) {
       if (ct_cfg->tracemap_format == FCIO_TRACE_MAP_FORMAT) {
         fprintf(stderr, "DEBUG %s channel   0x%x level_adc %d\n", ct_cfg->labels[i], ct_cfg->tracemap[i],
@@ -57,7 +57,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
-              "ERROR LPPSetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
+              "ERROR FSPSetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
               channelmap_fmt2str(format));
     free(fmc);
@@ -85,7 +85,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   }
 
   if (processor->loglevel >= 4) {
-    fprintf(stderr, "DEBUG LPPSetGeParameters\n");
+    fprintf(stderr, "DEBUG FSPSetGeParameters\n");
     fprintf(stderr, "DEBUG majority_threshold %d\n", majority_threshold);
     fprintf(stderr, "DEBUG prescale_ratio     %d\n", prescale_ratio);
     fprintf(stderr, "DEBUG skip_full_counting %d\n", fmc->fast);
@@ -113,7 +113,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
-              "CRITICAL LPPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
+              "CRITICAL FSPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
               "\"fcio-trace-index\", \"fcio-tracemap\" or \"rawid\".\n",
               channelmap_fmt2str(format));
     free(wps_cfg);
@@ -198,7 +198,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
 
   if (processor->loglevel >= 4) {
     /* DEBUGGING enabled, print all inputs */
-    fprintf(stderr, "DEBUG LPPSetSiPMParameters:\n");
+    fprintf(stderr, "DEBUG FSPSetSiPMParameters:\n");
     fprintf(stderr, "DEBUG channelmap_format %d : %s\n", wps_cfg->tracemap_format, channelmap_fmt2str(format));
     fprintf(stderr, "DEBUG prescale_ratio               %d\n", processor->config.wps_prescale_ratio);
     fprintf(stderr, "DEBUG sum_window_start_sample      %d\n", wps_cfg->sum_window_start_sample);
