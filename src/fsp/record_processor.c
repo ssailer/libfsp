@@ -15,7 +15,7 @@
 #include <time_utils.h>
 
 #include "buffer.h"
-#include "fsp_channelmaps.h"
+#include "tracemap.h"
 
 /* taken from falcon-daq*/
 

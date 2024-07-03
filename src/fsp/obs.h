@@ -2,7 +2,12 @@
 
 #include <fcio.h>
 
-#include "fsp/dsp.h"
+typedef struct {
+    int size;
+    int start[FCIOMaxSamples];
+    int stop[FCIOMaxSamples]; // first sample after trigger up is gone
+    float wps_max[FCIOMaxSamples];
+  } SubEventList;
 
 // Windows Peak Sum
 typedef struct wps_obs {

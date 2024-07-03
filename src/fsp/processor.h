@@ -4,6 +4,7 @@
 #include "fsp/flags.h"
 #include "fsp/stats.h"
 #include "fsp/buffer.h"
+#include "fsp/dsp.h"
 
 #define FC_MAXTICKS 249999999
 
