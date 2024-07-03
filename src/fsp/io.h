@@ -2,7 +2,8 @@
 
 #include <stddef.h>
 
-#include "fsp.h"
+#include "fsp/processor.h"
+#include <fcio.h>
 
 void FSPFlags2BitString(FSPState* fsp_state, size_t strlen, char* trigger_string, char* event_string);
 void FSPBitField2Flags(FSPState* fsp_state, uint32_t trigger_field, uint32_t event_field);

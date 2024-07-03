@@ -1,10 +1,11 @@
 #pragma once
 
-#include <fsp_processor.h>
-#include <fsp_channelmaps.h>
+#include <string.h>
+
+#include "fsp/processor.h"
+#include "fsp_channelmaps.h"
 
 #include <fcio.h>
-#include <string.h>
 
 static inline int load_sipm_tracemap(int max_channels, int *channels) {
   const int last_card = 10;

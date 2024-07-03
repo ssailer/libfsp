@@ -1,18 +1,19 @@
 #pragma once
 
+#include "fsp/state.h"
+#include "fsp/stats.h"
+#include "fsp/flags.h"
 
-#include <fsp_processor.h>
-#include <fsp_dsp.h>
-#include <fsp_state.h>
-#include <fsp_stats.h>
-#include <fsp_l200.h>
-#include <fsp_channelmaps.h>
-#include <fsp_serializers.h>
+#include "fsp_channelmaps.h"
+#include "fsp_l200.h"
 
 #include <stdint.h>
 #include <stddef.h>
 
 #include <fcio.h>
+
+#include "fsp/processor.h"
+
 
 /* Con-/Destructors and required setup. */
 

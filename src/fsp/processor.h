@@ -1,12 +1,10 @@
 #pragma once
 
-#include <fsp_timestamps.h>
-#include <fsp_stats.h>
-#include <fsp_state.h>
-#include <fsp_buffer.h>
-#include <fsp_dsp.h>
-
-#include <fcio.h>
+#include "fsp/timestamps.h"
+#include "fsp/flags.h"
+#include "fsp/state.h"
+#include "fsp/stats.h"
+#include "fsp/buffer.h"
 
 #define FC_MAXTICKS 249999999
 
@@ -72,7 +70,3 @@ typedef struct StreamProcessor {
   FSPConfig config;
 
 } StreamProcessor;
-
-
-int fsp_process(StreamProcessor* processor, FSPState* fsp_state, FCIOState* state);
-// unsigned int fsp_write_decision(FSPState* fsp_state);

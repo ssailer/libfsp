@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <fsp_state.h>
-
 int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int pulser_channel,
                         int pulser_level_adc, int baseline_channel, int baseline_level_adc,
                         int muon_channel, int muon_level_adc) {
