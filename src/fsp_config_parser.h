@@ -400,24 +400,24 @@ int FSPSetParametersFromFile(StreamProcessor *processor, const char *setup_path)
   FSPSetLogLevel(processor, loglevel);
   FSPSetLogTime(processor, log_time);
 
-  if (!FSPSetAuxParameters(processor, channelmap_format, digital_pulser_channel, pulser_level_adc,
+  if (!FSP_L200_SetAuxParameters(processor, channelmap_format, digital_pulser_channel, pulser_level_adc,
                            digital_baseline_channel, baseline_level_adc, digital_muon_channel, muon_level_adc)) {
-    fprintf(stderr, "FSPSetAuxParameters failed.");
+    fprintf(stderr, "FSP_L200_SetAuxParameters failed.");
     return 0;
   }
 
-  if (!FSPSetGeParameters(processor, ge_nchannels, ge_channelmap, channelmap_format, majority_threshold,
+  if (!FSP_L200_SetGeParameters(processor, ge_nchannels, ge_channelmap, channelmap_format, majority_threshold,
                           skip_full_counting, ge_prescaling_threshold_adc, ge_average_prescaling_rate_hz)) {
-    fprintf(stderr, "FSPSetGeParameters failed.");
+    fprintf(stderr, "FSP_L200_SetGeParameters failed.");
     return 0;
   }
 
-  if (!FSPSetSiPMParameters(processor, sipm_nchannels, sipm_channelmap, channelmap_format, calibration_pe_adc,
+  if (!FSP_L200_SetSiPMParameters(processor, sipm_nchannels, sipm_channelmap, channelmap_format, calibration_pe_adc,
                             channel_thresholds_pe, shaping_width_samples, lowpass_factors, coincidence_pre_window_ns,
                             coincidence_post_window_ns, coincidence_window_samples, sum_window_start_sample,
                             sum_window_stop_sample, sum_threshold_pe, coincidence_sum_threshold_pe,
                             sipm_average_prescaling_rate_hz, enable_muon_coincidence)) {
-    fprintf(stderr, "FSPSetSiPMParameters");
+    fprintf(stderr, "FSP_L200_SetSiPMParameters");
     return 0;
   }
 

@@ -2,12 +2,7 @@
 
 #include <fcio.h>
 
-typedef struct {
-    int size;
-    int start[FCIOMaxSamples];
-    int stop[FCIOMaxSamples]; // first sample after trigger up is gone
-    float wps_max[FCIOMaxSamples];
-  } SubEventList;
+#include "fsp/obs.h"
 
 typedef struct WindowedPeakSumConfig {
   int tracemap_format;

@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int pulser_channel,
+int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format, int pulser_channel,
                         int pulser_level_adc, int baseline_channel, int baseline_level_adc,
                         int muon_channel, int muon_level_adc) {
   if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
-              "ERROR FSPSetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
+              "ERROR FSP_L200_SetAuxParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
               channelmap_fmt2str(format));
     return 0;
@@ -32,7 +32,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
   ct_cfg->ntraces = 3;
 
   if (processor->loglevel >= 4) {
-    fprintf(stderr, "DEBUG FSPSetAuxParameters\n");
+    fprintf(stderr, "DEBUG FSP_L200_SetAuxParameters\n");
     for (int i = 0; i < ct_cfg->ntraces; i++) {
       if (ct_cfg->tracemap_format == FCIO_TRACE_MAP_FORMAT) {
         fprintf(stderr, "DEBUG %s channel   0x%x level_adc %d\n", ct_cfg->labels[i], ct_cfg->tracemap[i],
@@ -46,7 +46,7 @@ int FSPSetAuxParameters(StreamProcessor* processor, FSPChannelFormat format, int
   return 1;
 }
 
-int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPChannelFormat format,
+int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPTraceFormat format,
                        int majority_threshold, int skip_full_counting, unsigned short* ge_prescale_threshold_adc,
                        int prescale_ratio) {
   processor->hwm_cfg = calloc(1, sizeof(HardwareMajorityConfig));
@@ -55,7 +55,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
-              "ERROR FSPSetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
+              "ERROR FSP_L200_SetGeParameters: channel map type %s is not supported. Valid inputs are \"fcio-trace-index\", "
               "\"fcio-tracemap\" or \"rawid\".\n",
               channelmap_fmt2str(format));
     free(fmc);
@@ -83,7 +83,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   }
 
   if (processor->loglevel >= 4) {
-    fprintf(stderr, "DEBUG FSPSetGeParameters\n");
+    fprintf(stderr, "DEBUG FSP_L200_SetGeParameters\n");
     fprintf(stderr, "DEBUG majority_threshold %d\n", majority_threshold);
     fprintf(stderr, "DEBUG prescale_ratio     %d\n", prescale_ratio);
     fprintf(stderr, "DEBUG skip_full_counting %d\n", fmc->fast);
@@ -99,7 +99,7 @@ int FSPSetGeParameters(StreamProcessor* processor, int nchannels, int* channelma
   return 1;
 }
 
-int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPChannelFormat format,
+int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPTraceFormat format,
                          float* calibration_pe_adc, float* channel_thresholds_pe, int* shaping_width_samples,
                          float* lowpass_factors, int coincidence_pre_window_ns, int coincidence_post_window_ns,
                          int coincidence_window_samples, int sum_window_start_sample, int sum_window_stop_sample,
@@ -111,7 +111,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   if (!is_known_channelmap_format(format)) {
     if (processor->loglevel)
       fprintf(stderr,
-              "CRITICAL FSPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
+              "CRITICAL FSP_L200_SetSiPMParameters: channel map type %s is not supported. Valid inputs are "
               "\"fcio-trace-index\", \"fcio-tracemap\" or \"rawid\".\n",
               channelmap_fmt2str(format));
     free(wps_cfg);
@@ -150,7 +150,6 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
   wps_cfg->sum_window_stop_sample = sum_window_stop_sample;
   wps_cfg->coincidence_threshold = coincidence_wps_threshold;
 
-  /* TODO CHECK THIS*/
   wps_cfg->apply_gain_scaling = 1;
 
   wps_cfg->ntraces = nchannels;
@@ -196,7 +195,7 @@ int FSPSetSiPMParameters(StreamProcessor* processor, int nchannels, int* channel
 
   if (processor->loglevel >= 4) {
     /* DEBUGGING enabled, print all inputs */
-    fprintf(stderr, "DEBUG FSPSetSiPMParameters:\n");
+    fprintf(stderr, "DEBUG FSP_L200_SetSiPMParameters:\n");
     fprintf(stderr, "DEBUG channelmap_format %d : %s\n", wps_cfg->tracemap_format, channelmap_fmt2str(format));
     fprintf(stderr, "DEBUG prescale_ratio               %d\n", processor->config.wps_prescale_ratio);
     fprintf(stderr, "DEBUG sum_window_start_sample      %d\n", wps_cfg->sum_window_start_sample);
