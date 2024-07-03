@@ -30,7 +30,7 @@ void FSPEnableEventFlags(StreamProcessor *processor, EventFlags flags);
 void FSPSetWPSReferenceFlag(StreamProcessor* processor, uint64_t hwm_flags, uint64_t ct_flags, uint64_t wps_flags);
 
 /* Use FSPGetNextState to process states provided by FCIOStateReader until it returns NULL.
-    - Feed FCIOStates from FCIOGetNextStatevia LPPInput
+    - Feed FCIOStates from FCIOGetNextStatevia FSPInput
     - Poll FSPOutput until NULL
     - if states are null, buffer is flushed
 */

@@ -133,9 +133,7 @@ static inline EventFlags fsp_evt_flags(StreamProcessor* processor, FCIOState* st
     }
     Timestamp event_delta = timestamp_sub(now_ts, previous_ts);
     if (timestamp_leq(event_delta, delta_ts)) {
-      // write_flags.event |= EVT_RETRIGGER;
       evtflags.is_retrigger = 1;
-      /* Marking the previous event as EVT_EXTENDED happens in UpdateLPPState. */
       if (processor->loglevel >= 4)
         fprintf(stderr, "DEBUG fsp_evt_flags: retrigger now=%ld.%09ld previous=%ld.%09ld delta=%ld.%09ld\n",
                 now_ts.seconds, now_ts.nanoseconds, previous_ts.seconds, previous_ts.nanoseconds, delta_ts.seconds,
