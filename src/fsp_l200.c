@@ -26,20 +26,15 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
   ct_cfg->thresholds[0] = pulser_level_adc;
   ct_cfg->thresholds[1] = baseline_level_adc;
   ct_cfg->thresholds[2] = muon_level_adc;
-  ct_cfg->labels[0] = "Pulser";
-  ct_cfg->labels[1] = "Baseline";
-  ct_cfg->labels[2] = "Muon";
   ct_cfg->ntraces = 3;
 
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG FSP_L200_SetAuxParameters\n");
     for (int i = 0; i < ct_cfg->ntraces; i++) {
       if (ct_cfg->tracemap_format == FCIO_TRACE_MAP_FORMAT) {
-        fprintf(stderr, "DEBUG %s channel   0x%x level_adc %d\n", ct_cfg->labels[i], ct_cfg->tracemap[i],
-                ct_cfg->thresholds[i]);
+        fprintf(stderr, "DEBUG channel   0x%x level_adc %d\n", ct_cfg->tracemap[i], ct_cfg->thresholds[i]);
       } else {
-        fprintf(stderr, "DEBUG %s channel   %d level_adc %d\n", ct_cfg->labels[i], ct_cfg->tracemap[i],
-                ct_cfg->thresholds[i]);
+        fprintf(stderr, "DEBUG channel   %d level_adc %d\n", ct_cfg->tracemap[i], ct_cfg->thresholds[i]);
       }
     }
   }

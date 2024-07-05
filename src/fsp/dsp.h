@@ -76,7 +76,6 @@ typedef struct ChannelThresholdConfig {
   int ntraces;
   int tracemap[FCIOMaxChannels];
   unsigned short thresholds[FCIOMaxChannels];
-  const char* labels[FCIOMaxChannels];
   /* result fields */
   unsigned short max_values[FCIOMaxChannels];
   int max_tracemap_idx[FCIOMaxChannels];

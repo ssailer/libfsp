@@ -340,7 +340,6 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
           int tracemap_index = ct_cfg->max_tracemap_idx[i];
           fsp_state->obs.ct.max[i] = ct_cfg->max_values[i];
           fsp_state->obs.ct.trace_idx[i] = ct_cfg->tracemap[tracemap_index];
-          fsp_state->obs.ct.label[i] = ct_cfg->labels[tracemap_index];
         }
       }
 

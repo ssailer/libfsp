@@ -128,7 +128,7 @@ void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
 
   cstring[curr_offset++] = ':';
   for (int i = 0; curr_offset < strlen && i < fsp_state->obs.ct.multiplicity; i++, curr_offset++) {
-    cstring[curr_offset] = fsp_state->obs.ct.label[i][0];
+    cstring[curr_offset] = (char)i;
   }
   cstring[curr_offset] = '\0';
 }
@@ -233,7 +233,6 @@ int FCIOPutFSPConfig(FCIOStream output, StreamProcessor* processor) {
   /* CT config */
   FCIOWriteInts(output, processor->ct_cfg->ntraces, processor->ct_cfg->tracemap);
   FCIOWriteUShorts(output, processor->ct_cfg->ntraces, processor->ct_cfg->thresholds);
-  // FCIOWrite(output, processor->ct_cfg->ntraces, processor->ct_cfg->labels);
 
   /* WPS config */
   FCIOWriteInt(output, processor->wps_cfg->apply_gain_scaling);
@@ -327,7 +326,6 @@ static inline void fcio_get_fspconfig(FCIOStream in, StreamProcessor* processor)
   /* CT config */
   FCIOReadInts(in, FCIOMaxChannels, processor->ct_cfg->tracemap);
   FCIOReadUShorts(in, FCIOMaxChannels, processor->ct_cfg->thresholds);
-  // FCIORead(in, FCIOMaxChannels, processor->ct_cfg->labels);
 
   /* WPS config */
   FCIOReadInt(in, processor->wps_cfg->apply_gain_scaling);

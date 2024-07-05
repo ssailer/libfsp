@@ -16,9 +16,6 @@ typedef struct wps_obs {
   int max_multiplicity;  // How many channels did have a peak above thresholds
   float max_single_peak_value;   // which one was the largest individual peak
   int max_single_peak_offset;  // which sample contains this peak
-
-  /* sub triggerlist */
-  // WPSTriggerList trigger_list;
 } wps_obs;
 
 // FPGA Majority
@@ -34,7 +31,6 @@ typedef struct ct_obs {
   int multiplicity; // how many channels were above the threshold
   int trace_idx[FCIOMaxChannels]; // the corresponding fcio trace index
   unsigned short max[FCIOMaxChannels]; // the maximum per channel
-  const char* label[FCIOMaxChannels]; // the name of the channel given during setup
 
 } ct_obs;
 
