@@ -4,19 +4,21 @@
 #include <stdlib.h>
 
 #include <fcio.h>
+#include <bufio.h>
+#include <tmio.h>
 
 static inline size_t event_flag_2char(char* string, size_t strlen, EventFlags event_flags) {
   const int nflags = 2;
   assert(strlen >= nflags);
 
   int written = 0;
-  
+
   string[written++] = ':';
   if (event_flags.is_retrigger)
     string[written] = 'R';
   if (event_flags.is_extended)
     string[written] = 'E';
-  
+
   written++;
   return written;
 }
@@ -155,7 +157,7 @@ void FSPFlags2BitField(FSPState* fsp_state, uint32_t* trigger_field, uint32_t* e
   efield |= ((fsp_state->proc_flags.hwm.multiplicity_threshold & 0x1) << 7);
   efield |= ((fsp_state->proc_flags.hwm.multiplicity_below & 0x1)     << 8);
   efield |= ((fsp_state->proc_flags.ct.multiplicity & 0x1)            << 9);
-  
+
   *trigger_field = tfield;
   *event_field = efield;
 }
@@ -188,7 +190,7 @@ void FSPFlags2BitString(FSPState* fsp_state, size_t strlen, char* trigger_string
 
   char* trgstring = &trigger_string[8];
   char* evtstring = &event_string[12];
-  
+
   *trgstring-- = 0;
   *trgstring-- = (fsp_state->write_flags.trigger.hwm_multiplicity & 0x1) ? '1' : '0';
   *trgstring-- = (fsp_state->write_flags.trigger.hwm_prescaled & 0x1) ? '1' : '0';
