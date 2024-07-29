@@ -21,4 +21,4 @@ void FCIOGetFSPConfig(FCIOData* input, StreamProcessor* processor);
 void FCIOGetFSPStatus(FCIOData* input, StreamProcessor* processor);
 
 void FSPFreeStreamProcessor(StreamProcessor* processor);
-StreamProcessor* FSPCallocStreamProcessor();
+StreamProcessor* FSPCallocStreamProcessor(void);

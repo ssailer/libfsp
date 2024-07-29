@@ -396,7 +396,7 @@ void FCIOGetFSPStatus(FCIOData* input, StreamProcessor* processor)
   fcio_get_fspstatus(in, processor);
 }
 
-StreamProcessor* FSPCallocStreamProcessor()
+StreamProcessor* FSPCallocStreamProcessor(void)
 {
   StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
 
