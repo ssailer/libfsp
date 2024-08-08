@@ -38,11 +38,6 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
-fsp_io_sources = files(
-  'src/fsp/io.c'
-)
-fsp_io_dep = declare_dependency(include_directories : fsp_inc, sources : fsp_io_sources, dependencies : [fcio_dep, m_dep])
-
 install_headers(
   'src/fsp/processor.h',
   'src/fsp/timestamps.h',
