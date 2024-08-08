@@ -56,5 +56,7 @@ install_headers(
   'src/fsp.h',
 )
 
+subdir('tests')
+
 pkg_mod = import('pkgconfig')
 pkg_mod.generate(fsp_lib)

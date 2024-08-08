@@ -138,9 +138,9 @@ static inline CTFlags fsp_swt_channel_thresholds(StreamProcessor* processor, FCI
   fcio_event* event = state->event;
   CTFlags ctflags = {0};
 
-  fsp_dsp_channel_threshold(processor->ct_cfg, config->eventsamples, config->adcs, event->trace, event->theader);
+  fsp_dsp_channel_threshold(processor->dsp_ct, config->eventsamples, config->adcs, event->trace, event->theader);
 
-  if (processor->ct_cfg->multiplicity) {
+  if (processor->dsp_ct->multiplicity) {
     ctflags.multiplicity = 1;
   }
 
@@ -169,16 +169,16 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
 
   HWMFlags hwmflags = {0};
 
-  fsp_dsp_hardware_majority(processor->hwm_cfg, config->adcs, event->theader);
+  fsp_dsp_hardware_majority(processor->dsp_hwm, config->adcs, event->theader);
 
-  if (processor->hwm_cfg->multiplicity >= processor->config.hwm_threshold) {
+  if (processor->dsp_hwm->multiplicity >= processor->config.hwm_threshold) {
     hwmflags.multiplicity_threshold = 1;
 
     /* if majority is >= 1, then the following check is safe, otherwise think about what happens when majority == 0
        if there is any channel with a majority above the threshold, it's a force trigger, if not, it should be
        prescaled and not affect the rest of the datastream.
     */
-    if (processor->hwm_cfg->mult_below_threshold == processor->hwm_cfg->multiplicity) {
+    if (processor->dsp_hwm->mult_below_threshold == processor->dsp_hwm->multiplicity) {
       hwmflags.multiplicity_below = 1;
     }
   }
@@ -220,27 +220,27 @@ static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCI
   fcio_config* config = state->config;
   fcio_event* event = state->event;
   WPSFlags wpsflags = {0};
-  
-  fsp_dsp_windowed_peak_sum(processor->wps_cfg, config->eventsamples, config->adcs, event->trace);
+
+  fsp_dsp_windowed_peak_sum(processor->dsp_wps, config->eventsamples, config->adcs, event->trace);
 
   if (processor->loglevel >= 5) {
-    fprintf(stderr, "DEBUG sub_event_list evtno=%d,nregions=%d", event->timestamp[0], processor->wps_cfg->sub_event_list->size);
+    fprintf(stderr, "DEBUG sub_event_list evtno=%d,nregions=%d", event->timestamp[0], processor->dsp_wps->sub_event_list->size);
     int start = config->eventsamples;
     int stop = 0;
-    for (int i = 0; i < processor->wps_cfg->sub_event_list->size; i++) {
+    for (int i = 0; i < processor->dsp_wps->sub_event_list->size; i++) {
 
-      if (processor->wps_cfg->sub_event_list->start[i] < start)
-        start = processor->wps_cfg->sub_event_list->start[i];
+      if (processor->dsp_wps->sub_event_list->start[i] < start)
+        start = processor->dsp_wps->sub_event_list->start[i];
 
-      if (processor->wps_cfg->sub_event_list->stop[i] > stop)
-        stop = processor->wps_cfg->sub_event_list->stop[i];
+      if (processor->dsp_wps->sub_event_list->stop[i] > stop)
+        stop = processor->dsp_wps->sub_event_list->stop[i];
 
       fprintf(stderr, " pe=%.1f,start=%d,stop=%d,size=%d,time_us=%.3f",
-        processor->wps_cfg->sub_event_list->wps_max[i],
-        processor->wps_cfg->sub_event_list->start[i],
-        processor->wps_cfg->sub_event_list->stop[i],
-        processor->wps_cfg->sub_event_list->stop[i] - processor->wps_cfg->sub_event_list->start[i],
-        (processor->wps_cfg->sub_event_list->stop[i] - processor->wps_cfg->sub_event_list->start[i])*16e-3
+        processor->dsp_wps->sub_event_list->wps_max[i],
+        processor->dsp_wps->sub_event_list->start[i],
+        processor->dsp_wps->sub_event_list->stop[i],
+        processor->dsp_wps->sub_event_list->stop[i] - processor->dsp_wps->sub_event_list->start[i],
+        (processor->dsp_wps->sub_event_list->stop[i] - processor->dsp_wps->sub_event_list->start[i])*16e-3
       );
     }
 
@@ -249,11 +249,11 @@ static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCI
     );
   }
 
-  if (processor->wps_cfg->max_peak_sum_value >= processor->config.absolute_wps_threshold) {
+  if (processor->dsp_wps->max_peak_sum_value >= processor->config.absolute_wps_threshold) {
     wpsflags.abs_threshold = 1;
   }
 
-  if (processor->wps_cfg->max_peak_sum_value >= processor->config.relative_wps_threshold) {
+  if (processor->dsp_wps->max_peak_sum_value >= processor->config.relative_wps_threshold) {
     wpsflags.rel_threshold = 1;
   }
 
@@ -273,10 +273,10 @@ static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCI
         wpsflags.prescaled = 1;
         Timestamp next_timestamp = generate_prescale_timestamp(processor->config.wps_prescale_rate);
         if (processor->loglevel >= 4)
-        fprintf(stderr, "DEBUG wps_prescale current timestamp %ld.%09ld + %ld.%09ld\n",
-          processor->hwm_prescale_timestamp.seconds, processor->hwm_prescale_timestamp.nanoseconds,
-          next_timestamp.seconds, next_timestamp.nanoseconds
-        );
+          fprintf(stderr, "DEBUG wps_prescale current timestamp %ld.%09ld + %ld.%09ld\n",
+            processor->hwm_prescale_timestamp.seconds, processor->hwm_prescale_timestamp.nanoseconds,
+            next_timestamp.seconds, next_timestamp.nanoseconds
+          );
         processor->wps_prescale_timestamp.seconds += next_timestamp.seconds;
         processor->wps_prescale_timestamp.nanoseconds += next_timestamp.nanoseconds;
       }
@@ -287,9 +287,9 @@ static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCI
 }
 
 int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIOState* state) {
-  WindowedPeakSumConfig* wps_cfg = processor->wps_cfg;
-  HardwareMajorityConfig* hwm_cfg = processor->hwm_cfg;
-  ChannelThresholdConfig* ct_cfg = processor->ct_cfg;
+  DSPWindowedPeakSum* wps_cfg = processor->dsp_wps;
+  DSPHardwareMajority* hwm_cfg = processor->dsp_hwm;
+  DSPChannelThreshold* ct_cfg = processor->dsp_ct;
 
   /* need to zero init in case on of the processors is not enabled */
   FSPWriteFlags write_flags = {0};
@@ -335,7 +335,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       if (ct_cfg) {
         proc_flags.ct = fsp_swt_channel_thresholds(processor, state);
         fsp_state->obs.ct.multiplicity = ct_cfg->multiplicity;
-        
+
         for (int i = 0; i < fsp_state->obs.ct.multiplicity; i++) {
           int tracemap_index = ct_cfg->max_tracemap_idx[i];
           fsp_state->obs.ct.max[i] = ct_cfg->max_values[i];
@@ -344,7 +344,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       }
 
       if (wps_cfg) {
-        processor->wps_cfg->sub_event_list = &fsp_state->obs.sub_event_list; //load current trigger_list into config struct
+        processor->dsp_wps->sub_event_list = &fsp_state->obs.sub_event_list; //load current trigger_list into config struct
         proc_flags.wps = fsp_swt_windowed_peak_sum(processor, state, fsp_state->timestamp);
         fsp_state->obs.wps.max_value = wps_cfg->max_peak_sum_value;
         fsp_state->obs.wps.max_offset = wps_cfg->max_peak_sum_offset;
@@ -354,7 +354,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       }
 
       // finally determine if one of the flags is a reference flag for the wps coincidence
-      if ( processor->config.wps_reference_flags_ct.is_flagged & proc_flags.ct.is_flagged 
+      if ( processor->config.wps_reference_flags_ct.is_flagged & proc_flags.ct.is_flagged
         || processor->config.wps_reference_flags_hwm.is_flagged & proc_flags.hwm.is_flagged
         || processor->config.wps_reference_flags_wps.is_flagged & proc_flags.wps.is_flagged
       ) {
@@ -383,14 +383,14 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
     case FCIOConfig: {
       // format == 0 is already converted to trace indices used by fcio
-      if (processor->ct_cfg) {
-        if (processor->ct_cfg->tracemap_format) {
-          int success = convert2traceidx(processor->ct_cfg->ntraces, processor->ct_cfg->tracemap,
-                                          processor->ct_cfg->tracemap_format, state->config->tracemap);
+      if (processor->dsp_ct) {
+        if (processor->dsp_ct->tracemap_format) {
+          int success = convert2traceidx(processor->dsp_ct->ntraces, processor->dsp_ct->tracemap,
+                                          processor->dsp_ct->tracemap_format, state->config->tracemap);
           if (processor->loglevel >= 4) {
-            for (int i = 0; i < processor->ct_cfg->ntraces; i++) {
+            for (int i = 0; i < processor->dsp_ct->ntraces; i++) {
               fprintf(stderr, "DEBUG conversion channel threshold trace index %d\n",
-                      processor->ct_cfg->tracemap[i]);
+                      processor->dsp_ct->tracemap[i]);
             }
           }
           if (!success) {
@@ -402,13 +402,13 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
         }
       }
 
-      if (processor->wps_cfg) {
-        if (processor->wps_cfg->tracemap_format) {
-          int success = convert2traceidx(processor->wps_cfg->ntraces, processor->wps_cfg->tracemap,
-                                          processor->wps_cfg->tracemap_format, state->config->tracemap);
+      if (processor->dsp_wps) {
+        if (processor->dsp_wps->tracemap_format) {
+          int success = convert2traceidx(processor->dsp_wps->ntraces, processor->dsp_wps->tracemap,
+                                          processor->dsp_wps->tracemap_format, state->config->tracemap);
           if (processor->loglevel >= 4) {
-            for (int i = 0; i < processor->wps_cfg->ntraces; i++) {
-              fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->wps_cfg->tracemap[i]);
+            for (int i = 0; i < processor->dsp_wps->ntraces; i++) {
+              fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->dsp_wps->tracemap[i]);
             }
           }
           if (!success) {
@@ -461,14 +461,14 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
         }
       }
 
-      if (processor->hwm_cfg) {
-        if (processor->hwm_cfg->tracemap_format) {
-          int success = convert2traceidx(processor->hwm_cfg->ntraces, processor->hwm_cfg->tracemap,
-                                          processor->hwm_cfg->tracemap_format, state->config->tracemap);
+      if (processor->dsp_hwm) {
+        if (processor->dsp_hwm->tracemap_format) {
+          int success = convert2traceidx(processor->dsp_hwm->ntraces, processor->dsp_hwm->tracemap,
+                                          processor->dsp_hwm->tracemap_format, state->config->tracemap);
           if (processor->loglevel >= 4) {
-            for (int i = 0; i < processor->hwm_cfg->ntraces; i++) {
+            for (int i = 0; i < processor->dsp_hwm->ntraces; i++) {
               fprintf(stderr, "DEBUG conversion hw majority trace index %d\n",
-                      processor->hwm_cfg->tracemap[i]);
+                      processor->dsp_hwm->tracemap[i]);
             }
           }
           if (!success) {
@@ -573,4 +573,3 @@ int fsp_process(StreamProcessor* processor, FSPState* fsp_state, FCIOState* stat
     return 0;
   return 1;
 }
-

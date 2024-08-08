@@ -54,7 +54,7 @@ typedef struct WindowedPeakSumConfig {
   int *channel_pulses;
   int *total_pulses;
 
-} WindowedPeakSumConfig;
+} DSPWindowedPeakSum;
 
 typedef struct HardwareMajorityConfig {
   int tracemap_format;
@@ -69,7 +69,7 @@ typedef struct HardwareMajorityConfig {
   unsigned short max_value; // the largest channel hw value
   unsigned short min_value; // the smallest channel hw value, but > 0
 
-} HardwareMajorityConfig;
+} DSPHardwareMajority;
 
 typedef struct ChannelThresholdConfig {
   int tracemap_format;
@@ -80,7 +80,7 @@ typedef struct ChannelThresholdConfig {
   unsigned short max_values[FCIOMaxChannels];
   int max_tracemap_idx[FCIOMaxChannels];
   int multiplicity;
-} ChannelThresholdConfig;
+} DSPChannelThreshold;
 
 /* Differentiates trace, searches for gain adjusted peaks above threshold. Peaks are stored in peak_trace.*/
 float fsp_dsp_diff_and_find_peaks(float *input_trace, float *diff_trace, float *peak_trace, int start, int stop,
@@ -95,9 +95,9 @@ int fsp_dsp_diff_and_smooth_post_samples(unsigned int shaping_width_samples, flo
 
 unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int stop, int nsamples, unsigned short threshold);
 
-void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntraces, unsigned short **traces);
-void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigned short **trace_headers);
-void fsp_dsp_channel_threshold(ChannelThresholdConfig* cfg, int nsamples, int ntraces, unsigned short **traces, unsigned short **theaders);
+void fsp_dsp_windowed_peak_sum(DSPWindowedPeakSum *cfg, int nsamples, int ntraces, unsigned short **traces);
+void fsp_dsp_hardware_majority(DSPHardwareMajority *cfg, int ntraces, unsigned short **trace_headers);
+void fsp_dsp_channel_threshold(DSPChannelThreshold* cfg, int nsamples, int ntraces, unsigned short **traces, unsigned short **theaders);
 
 
 void tracewindow(int n, float *trace, int ss, double gain, float *out);

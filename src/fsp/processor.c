@@ -86,9 +86,9 @@ void FSPDestroy(StreamProcessor* processor)
 {
   FSPBufferDestroy(processor->buffer);
   free(processor->stats);
-  free(processor->hwm_cfg);
-  free(processor->wps_cfg);
-  free(processor->ct_cfg);
+  free(processor->dsp_hwm);
+  free(processor->dsp_wps);
+  free(processor->dsp_ct);
   free(processor);
 }
 

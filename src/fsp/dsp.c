@@ -207,7 +207,7 @@ float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincide
       up = 0;
     } else if (!up && acc >= coincidence_threshold) {
       // start new entry
-      
+
       // only if it's not the first one do we check if they are overlapping within the coincidence window
       if (sub_event_list->size && (i+1 < sub_event_list->stop[sub_event_list->size-1])) {// check if new start is within stop of old window
         // it's inside, so we forget the previous stop and wait for the next one
@@ -217,7 +217,7 @@ float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincide
         sub_event_list->start[sub_event_list->size] = i + 1; // first sample of the new sum
       }
       up = 1;
-      
+
     }
     if (acc > sub_event_list->wps_max[sub_event_list->size]) {
       sub_event_list->wps_max[sub_event_list->size] = acc;
@@ -230,7 +230,7 @@ float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincide
     sub_event_list->stop[sub_event_list->size] = stop;
     sub_event_list->size++;
   }
-  
+
   if (largest_sum_offset)
     *largest_sum_offset = offset;  // round down if uneven window, close enough.
 
@@ -396,7 +396,7 @@ void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int s
   }
 }
 
-void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntraces, unsigned short **traces) {
+void fsp_dsp_windowed_peak_sum(DSPWindowedPeakSum *cfg, int nsamples, int ntraces, unsigned short **traces) {
   assert(cfg->ntraces <= ntraces);
   int *npulses = NULL;
   float *pulse_times = NULL;
@@ -465,7 +465,7 @@ void fsp_dsp_windowed_peak_sum(WindowedPeakSumConfig *cfg, int nsamples, int ntr
   cfg->max_peak_offset = total_largest_peak_offset;
 }
 
-void fsp_dsp_hardware_majority(HardwareMajorityConfig *cfg, int ntraces, unsigned short **trace_headers) {
+void fsp_dsp_hardware_majority(DSPHardwareMajority *cfg, int ntraces, unsigned short **trace_headers) {
   assert(cfg->ntraces <= ntraces);
 
   int multiplicity = 0;
@@ -518,7 +518,7 @@ unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int s
   return 0;
 }
 
-void fsp_dsp_channel_threshold(ChannelThresholdConfig* cfg, int nsamples, int ntraces, unsigned short **traces, unsigned short** theaders) {
+void fsp_dsp_channel_threshold(DSPChannelThreshold* cfg, int nsamples, int ntraces, unsigned short **traces, unsigned short** theaders) {
   assert(cfg->ntraces <= ntraces);
 
   int nfound = 0;

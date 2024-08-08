@@ -60,9 +60,9 @@ typedef struct StreamProcessor {
   int minimum_buffer_depth;
   FSPBuffer *buffer;
 
-  WindowedPeakSumConfig *wps_cfg;
-  HardwareMajorityConfig *hwm_cfg;
-  ChannelThresholdConfig *ct_cfg;
+  DSPWindowedPeakSum *dsp_wps;
+  DSPHardwareMajority *dsp_hwm;
+  DSPChannelThreshold *dsp_ct;
   FSPStats *stats;
 
 } StreamProcessor;

@@ -8,7 +8,7 @@ $(BUILDDIR):
 	meson setup $(BUILDDIR)
 
 clean:
-	@rm -rf $(BUILDDIR)
+	@rm -r $(BUILDDIR)
 
 compile: $(BUILDDIR)
 	meson compile -C $(BUILDDIR)
@@ -21,3 +21,6 @@ install: compile
 
 uninstall:
 	cd $(BUILDDIR) && meson --internal uninstall
+
+test:
+	meson test -C $(BUILDDIR) -v --suite fsp
