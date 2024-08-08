@@ -2,7 +2,7 @@
 
 #include <fcio.h>
 
-#include "fsp/obs.h"
+#include "fsp/observables.h"
 
 typedef struct WindowedPeakSumConfig {
   int tracemap_format;

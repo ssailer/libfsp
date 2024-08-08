@@ -1,19 +1,11 @@
-#include "fsp/buffer.h"
-#include "fsp/dsp.h"
-#include "fsp/flags.h"
-#include "fsp/io.h"
-
-#include <tmio.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "fsp/obs.h"
-#include "fsp/processor.h"
-#include "fsp/state.h"
-#include "fsp/timestamps.h"
+#include <tmio.h>
+#include <fsp.h>
+
 #include "test.h"
 
 typedef struct {

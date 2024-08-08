@@ -44,16 +44,22 @@ fsp_io_sources = files(
 fsp_io_dep = declare_dependency(include_directories : fsp_inc, sources : fsp_io_sources, dependencies : [fcio_dep, m_dep])
 
 install_headers(
+  'src/fsp/processor.h',
+  'src/fsp/timestamps.h',
   'src/fsp/record_processor.h',
   'src/fsp/dsp.h',
+  'src/fsp/buffer.h',
   'src/fsp/state.h',
   'src/fsp/stats.h',
   'src/fsp/flags.h',
-  'src/fsp/obs.h',
+  'src/fsp/observables.h',
   'src/fsp/tracemap.h',
   'src/fsp/io.h',
-  'src/fsp_l200.h',
+  subdir : 'fsp'
+)
+install_headers(
   'src/fsp.h',
+  'src/fsp_l200.h'
 )
 
 subdir('tests')
