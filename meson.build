@@ -16,6 +16,7 @@ cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required : true)
 
 fcio_dep = dependency('fcio', fallback : ['fcio', 'fcio_dep'])
+fcio_utils_dep = dependency('fcio_utils', fallback : ['fcio', 'fcio_utils_dep'])
 
 subdir('src')
 
@@ -26,7 +27,7 @@ fsp_lib = library('fsp',
   install : true
 )
 
-fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
+fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, fcio_utils_dep, m_dep])
 
 
 subdir('tests')

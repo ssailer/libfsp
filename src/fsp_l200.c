@@ -15,7 +15,7 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
               channelmap_fmt2str(format));
     return 0;
   }
-  processor->dsp_ct = calloc(1, sizeof(DSPChannelThreshold));
+  // processor->dsp_ct = calloc(1, sizeof(DSPChannelThreshold));
 
   DSPChannelThreshold* ct_cfg = processor->dsp_ct;
 
@@ -44,7 +44,7 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
 int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPTraceFormat format,
                        int majority_threshold, int skip_full_counting, unsigned short* ge_prescale_threshold_adc,
                        int prescale_ratio) {
-  processor->dsp_hwm = calloc(1, sizeof(DSPHardwareMajority));
+  // processor->dsp_hwm = calloc(1, sizeof(DSPHardwareMajority));
   DSPHardwareMajority* fmc = processor->dsp_hwm;
 
   if (!is_known_channelmap_format(format)) {
@@ -100,7 +100,7 @@ int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* c
                          int coincidence_window_samples, int sum_window_start_sample, int sum_window_stop_sample,
                          float sum_threshold_pe, float coincidence_wps_threshold, int prescale_ratio,
                          int enable_muon_coincidence) {
-  processor->dsp_wps = calloc(1, sizeof(DSPWindowedPeakSum));
+  // processor->dsp_wps = calloc(1, sizeof(DSPWindowedPeakSum));
   DSPWindowedPeakSum* wps_cfg = processor->dsp_wps;
 
   if (!is_known_channelmap_format(format)) {

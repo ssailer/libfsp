@@ -57,7 +57,7 @@ typedef struct StreamProcessor {
   FSPConfig config;
 
   Timestamp minimum_buffer_window;
-  int minimum_buffer_depth;
+  unsigned int minimum_buffer_depth;
   FSPBuffer *buffer;
 
   DSPWindowedPeakSum *dsp_wps;
@@ -69,9 +69,9 @@ typedef struct StreamProcessor {
 
 /* Con-/Destructors and required setup. */
 
-StreamProcessor *FSPCreate(void);
+StreamProcessor *FSPCreate(unsigned int buffer_depth);
 void FSPDestroy(StreamProcessor *processor);
-int FSPSetBufferSize(StreamProcessor *processor, int buffer_depth);
+int FSPSetBufferSize(StreamProcessor *processor, unsigned int buffer_depth);
 
 /* Change defaults*/
 

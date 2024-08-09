@@ -2,21 +2,10 @@
 
 #include "fsp/processor.h"
 #include <fcio.h>
+#include <fcio_utils.h>
 
-typedef struct {
-  size_t protocol;
-  size_t config;
-  size_t event;
-  size_t sparseevent;
-  size_t eventheader;
-  size_t status;
-  size_t fspconfig;
-  size_t fspevent;
-  size_t fspstatus;
-
-} FCIORecordSizes;
-
-FCIORecordSizes FSPMeasureRecordSizes(FCIOData* data, StreamProcessor* processor, FSPState* fspstate);
+FCIORecordSizes FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes);
+FCIORecordSizes FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes);
 
 int FCIOGetFSPEvent(FCIOData* input, FSPState* fsp_state);
 int FCIOGetFSPConfig(FCIOData* input, StreamProcessor* processor);

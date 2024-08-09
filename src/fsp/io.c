@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 static inline size_t event_flag_2char(char* string, size_t strlen, EventFlags event_flags) {
-  const int nflags = 2;
+  const size_t nflags = 2;
   assert(strlen >= nflags);
 
   int written = 0;
@@ -23,7 +23,7 @@ static inline size_t event_flag_2char(char* string, size_t strlen, EventFlags ev
 }
 
 static inline size_t ct_flag_2char(char* string, size_t strlen, CTFlags ct_flags) {
-  const int nflags = 2;
+  const size_t nflags = 2;
   assert(strlen >= nflags);
 
   int written = 0;
@@ -34,7 +34,7 @@ static inline size_t ct_flag_2char(char* string, size_t strlen, CTFlags ct_flags
 }
 
 static inline size_t hwm_flag_2char(char* string, size_t strlen, HWMFlags hwm_flags) {
-  const int nflags = 3;
+  const size_t nflags = 3;
   assert(strlen >= nflags);
 
   int written = 0;
@@ -47,7 +47,7 @@ static inline size_t hwm_flag_2char(char* string, size_t strlen, HWMFlags hwm_fl
 }
 
 static inline size_t wps_flag_2char(char* string, size_t strlen, WPSFlags wps_flags) {
-  const int nflags = 6;
+  const size_t nflags = 6;
   assert(strlen >= nflags);
 
   int written = 0;
@@ -66,7 +66,7 @@ static inline size_t wps_flag_2char(char* string, size_t strlen, WPSFlags wps_fl
 }
 
 static inline size_t st_flag_2char(char* string, size_t strlen, STFlags st_flags) {
-  const int nflags = 7;
+  const size_t nflags = 7;
   assert(strlen >= nflags);
 
   int written = 0;
@@ -89,7 +89,7 @@ static inline size_t st_flag_2char(char* string, size_t strlen, STFlags st_flags
 }
 
 void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
-  const int nfields = 9 + 6 + 1 + 1 + 2 + 5;
+  const size_t nfields = 9 + 6 + 1 + 1 + 2 + 5;
   assert(strlen >= nfields);
 
   for (size_t i = 0; i < nfields; i++) cstring[i] = '_';
@@ -213,29 +213,4 @@ void FSPFlags2BitString(FSPState* fsp_state, size_t strlen, char* trigger_string
   *evtstring-- = (fsp_state->proc_flags.ct.multiplicity & 0x1) ? '1' : '0';
   *evtstring-- = 'b';
   *evtstring-- = '0';
-}
-
-
-StreamProcessor* FSPCallocStreamProcessor(void)
-{
-  StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
-
-  processor->stats = calloc(1, sizeof(FSPStats));
-  processor->buffer = calloc(1, sizeof(FSPBuffer));
-
-  processor->dsp_wps = calloc(1, sizeof(DSPWindowedPeakSum));
-  processor->dsp_hwm = calloc(1, sizeof(DSPHardwareMajority));
-  processor->dsp_ct = calloc(1, sizeof(DSPChannelThreshold));
-  return processor;
-}
-
-void FSPFreeStreamProcessor(StreamProcessor* processor)
-{
-  free(processor->dsp_ct);
-  free(processor->dsp_hwm);
-  free(processor->dsp_wps);
-  free(processor->buffer);
-  free(processor->stats);
-
-  free(processor);
 }

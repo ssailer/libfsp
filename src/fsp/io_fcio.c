@@ -1,6 +1,6 @@
 #include "fsp/io_fcio.h"
 
-#include <fcio.h>
+#include <threads.h>
 #include <tmio.h>
 
 static inline int fcio_put_fspconfig_buffer(FCIOStream stream, FSPBuffer* buffer) {
@@ -12,45 +12,45 @@ static inline int fcio_put_fspconfig_buffer(FCIOStream stream, FSPBuffer* buffer
   return 0;
 }
 
-static inline int fcio_put_fspconfig_hwm(FCIOStream stream, DSPHardwareMajority* hwm_cfg) {
-  if (!stream || !hwm_cfg)
+static inline int fcio_put_fspconfig_hwm(FCIOStream stream, DSPHardwareMajority* dsp_hwm) {
+  if (!stream || !dsp_hwm)
     return -1;
-  FCIOWriteInts(stream, hwm_cfg->ntraces, hwm_cfg->tracemap);
-  FCIOWriteUShorts(stream, hwm_cfg->ntraces, hwm_cfg->fpga_energy_threshold_adc);
+  FCIOWriteInts(stream, dsp_hwm->ntraces, dsp_hwm->tracemap);
+  FCIOWriteUShorts(stream, dsp_hwm->ntraces, dsp_hwm->fpga_energy_threshold_adc);
 
   return 0;
 }
 
-static inline int fcio_put_fspconfig_ct(FCIOStream stream, DSPChannelThreshold* ct_cfg) {
-  if (!stream || !ct_cfg)
+static inline int fcio_put_fspconfig_ct(FCIOStream stream, DSPChannelThreshold* dsp_ct) {
+  if (!stream || !dsp_ct)
     return -1;
-  FCIOWriteInts(stream, ct_cfg->ntraces, ct_cfg->tracemap);
-  FCIOWriteUShorts(stream, ct_cfg->ntraces, ct_cfg->thresholds);
+  FCIOWriteInts(stream, dsp_ct->ntraces, dsp_ct->tracemap);
+  FCIOWriteUShorts(stream, dsp_ct->ntraces, dsp_ct->thresholds);
 
   return 0;
 }
 
-static inline int fcio_put_fspconfig_wps(FCIOStream stream, DSPWindowedPeakSum* wps_cfg) {
-  if (!stream || !wps_cfg)
+static inline int fcio_put_fspconfig_wps(FCIOStream stream, DSPWindowedPeakSum* dsp_wps) {
+  if (!stream || !dsp_wps)
     return -1;
-  FCIOWriteInt(stream, wps_cfg->apply_gain_scaling);
-  FCIOWriteInt(stream, wps_cfg->coincidence_window);
-  FCIOWriteInt(stream, wps_cfg->sum_window_start_sample);
-  FCIOWriteInt(stream, wps_cfg->sum_window_stop_sample);
-  FCIOWriteFloat(stream, wps_cfg->coincidence_threshold);
+  FCIOWriteInt(stream, dsp_wps->apply_gain_scaling);
+  FCIOWriteInt(stream, dsp_wps->coincidence_window);
+  FCIOWriteInt(stream, dsp_wps->sum_window_start_sample);
+  FCIOWriteInt(stream, dsp_wps->sum_window_stop_sample);
+  FCIOWriteFloat(stream, dsp_wps->coincidence_threshold);
 
-  FCIOWriteInts(stream, wps_cfg->ntraces, wps_cfg->tracemap);
-  FCIOWriteFloats(stream, wps_cfg->ntraces, wps_cfg->gains);
-  FCIOWriteFloats(stream, wps_cfg->ntraces, wps_cfg->thresholds);
-  FCIOWriteFloats(stream, wps_cfg->ntraces, wps_cfg->lowpass);
-  FCIOWriteFloats(stream, wps_cfg->ntraces, wps_cfg->shaping_widths);
+  FCIOWriteInts(stream, dsp_wps->ntraces, dsp_wps->tracemap);
+  FCIOWriteFloats(stream, dsp_wps->ntraces, dsp_wps->gains);
+  FCIOWriteFloats(stream, dsp_wps->ntraces, dsp_wps->thresholds);
+  FCIOWriteFloats(stream, dsp_wps->ntraces, dsp_wps->lowpass);
+  FCIOWriteFloats(stream, dsp_wps->ntraces, dsp_wps->shaping_widths);
 
-  FCIOWriteInt(stream, wps_cfg->dsp_pre_max_samples);
-  FCIOWriteInt(stream, wps_cfg->dsp_post_max_samples);
-  FCIOWriteInts(stream, wps_cfg->ntraces, wps_cfg->dsp_pre_samples);
-  FCIOWriteInts(stream, wps_cfg->ntraces, wps_cfg->dsp_post_samples);
-  FCIOWriteInts(stream, wps_cfg->ntraces, wps_cfg->dsp_start_sample);
-  FCIOWriteInts(stream, wps_cfg->ntraces, wps_cfg->dsp_stop_sample);
+  FCIOWriteInt(stream, dsp_wps->dsp_pre_max_samples);
+  FCIOWriteInt(stream, dsp_wps->dsp_post_max_samples);
+  FCIOWriteInts(stream, dsp_wps->ntraces, dsp_wps->dsp_pre_samples);
+  FCIOWriteInts(stream, dsp_wps->ntraces, dsp_wps->dsp_post_samples);
+  FCIOWriteInts(stream, dsp_wps->ntraces, dsp_wps->dsp_start_sample);
+  FCIOWriteInts(stream, dsp_wps->ntraces, dsp_wps->dsp_stop_sample);
 
   return 0;
 }
@@ -83,45 +83,45 @@ static inline int fcio_get_fspconfig_buffer(FCIOStream in, FSPBuffer* buffer) {
   return 0;
 }
 
-static inline int fcio_get_fspconfig_hwm(FCIOStream in, DSPHardwareMajority* hwm_cfg) {
-  if (!hwm_cfg)
+static inline int fcio_get_fspconfig_hwm(FCIOStream in, DSPHardwareMajority* dsp_hwm) {
+  if (!dsp_hwm)
     return -1;
-  hwm_cfg->ntraces = FCIOReadInts(in, FCIOMaxChannels, hwm_cfg->tracemap) / sizeof(*hwm_cfg->tracemap);
-  FCIOReadUShorts(in, FCIOMaxChannels, hwm_cfg->fpga_energy_threshold_adc);
+  dsp_hwm->ntraces = FCIOReadInts(in, FCIOMaxChannels, dsp_hwm->tracemap) / sizeof(*dsp_hwm->tracemap);
+  FCIOReadUShorts(in, FCIOMaxChannels, dsp_hwm->fpga_energy_threshold_adc);
 
   return 0;
 }
 
-static inline int fcio_get_fspconfig_ct(FCIOStream in, DSPChannelThreshold* ct_cfg) {
-  if (!ct_cfg)
+static inline int fcio_get_fspconfig_ct(FCIOStream in, DSPChannelThreshold* dsp_ct) {
+  if (!dsp_ct)
     return -1;
-  ct_cfg->ntraces = FCIOReadInts(in, FCIOMaxChannels, ct_cfg->tracemap) / sizeof(*ct_cfg->tracemap);
-  FCIOReadUShorts(in, FCIOMaxChannels, ct_cfg->thresholds);
+  dsp_ct->ntraces = FCIOReadInts(in, FCIOMaxChannels, dsp_ct->tracemap) / sizeof(*dsp_ct->tracemap);
+  FCIOReadUShorts(in, FCIOMaxChannels, dsp_ct->thresholds);
 
   return 0;
 }
 
-static inline int fcio_get_fspconfig_wps(FCIOStream in, DSPWindowedPeakSum* wps_cfg) {
-  if (!wps_cfg)
+static inline int fcio_get_fspconfig_wps(FCIOStream in, DSPWindowedPeakSum* dsp_wps) {
+  if (!dsp_wps)
     return -1;
-  FCIOReadInt(in, wps_cfg->apply_gain_scaling);
-  FCIOReadInt(in, wps_cfg->coincidence_window);
-  FCIOReadInt(in, wps_cfg->sum_window_start_sample);
-  FCIOReadInt(in, wps_cfg->sum_window_stop_sample);
-  FCIOReadFloat(in, wps_cfg->coincidence_threshold);
+  FCIOReadInt(in, dsp_wps->apply_gain_scaling);
+  FCIOReadInt(in, dsp_wps->coincidence_window);
+  FCIOReadInt(in, dsp_wps->sum_window_start_sample);
+  FCIOReadInt(in, dsp_wps->sum_window_stop_sample);
+  FCIOReadFloat(in, dsp_wps->coincidence_threshold);
 
-  wps_cfg->ntraces = FCIOReadInts(in, FCIOMaxChannels, wps_cfg->tracemap) / sizeof(*wps_cfg->tracemap);
-  FCIOReadFloats(in, FCIOMaxChannels, wps_cfg->gains);
-  FCIOReadFloats(in, FCIOMaxChannels, wps_cfg->thresholds);
-  FCIOReadFloats(in, FCIOMaxChannels, wps_cfg->lowpass);
-  FCIOReadFloats(in, FCIOMaxChannels, wps_cfg->shaping_widths);
+  dsp_wps->ntraces = FCIOReadInts(in, FCIOMaxChannels, dsp_wps->tracemap) / sizeof(*dsp_wps->tracemap);
+  FCIOReadFloats(in, FCIOMaxChannels, dsp_wps->gains);
+  FCIOReadFloats(in, FCIOMaxChannels, dsp_wps->thresholds);
+  FCIOReadFloats(in, FCIOMaxChannels, dsp_wps->lowpass);
+  FCIOReadFloats(in, FCIOMaxChannels, dsp_wps->shaping_widths);
 
-  FCIOReadInt(in, wps_cfg->dsp_pre_max_samples);
-  FCIOReadInt(in, wps_cfg->dsp_post_max_samples);
-  FCIOReadInts(in, FCIOMaxChannels, wps_cfg->dsp_pre_samples);
-  FCIOReadInts(in, FCIOMaxChannels, wps_cfg->dsp_post_samples);
-  FCIOReadInts(in, FCIOMaxChannels, wps_cfg->dsp_start_sample);
-  FCIOReadInts(in, FCIOMaxChannels, wps_cfg->dsp_stop_sample);
+  FCIOReadInt(in, dsp_wps->dsp_pre_max_samples);
+  FCIOReadInt(in, dsp_wps->dsp_post_max_samples);
+  FCIOReadInts(in, FCIOMaxChannels, dsp_wps->dsp_pre_samples);
+  FCIOReadInts(in, FCIOMaxChannels, dsp_wps->dsp_post_samples);
+  FCIOReadInts(in, FCIOMaxChannels, dsp_wps->dsp_start_sample);
+  FCIOReadInts(in, FCIOMaxChannels, dsp_wps->dsp_stop_sample);
 
   return 0;
 }
@@ -240,7 +240,12 @@ int FCIOPutFSPStatus(FCIOStream output, StreamProcessor* processor)
 int FCIOPutFSP(FCIOStream output, StreamProcessor* processor)
 {
 
-  if (!output || !processor->buffer->last_fsp_state)
+  if (!output
+    || !processor
+    || !processor->buffer
+    || !processor->buffer->last_fsp_state
+    || !processor->buffer->last_fsp_state->state
+  )
     return -1;
 
   switch (processor->buffer->last_fsp_state->state->last_tag) {
@@ -261,67 +266,108 @@ int FCIOPutFSP(FCIOStream output, StreamProcessor* processor)
   }
 }
 
-
-static inline size_t written_bytes(FCIOStream stream, int reset)
-{
-  static size_t written = 0;
-  if (reset) {
-    written = 0;
-    return 0;
-  }
-  tmio_stream* tmio = (tmio_stream*)stream;
-
-  size_t new = tmio->byteswritten - written;
-  written = tmio->byteswritten;
-  return new;
-}
-
-FCIORecordSizes FSPMeasureRecordSizes(FCIOData* data, StreamProcessor* processor, FSPState* fspstate)
+FCIORecordSizes FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes)
 {
   const char* null_device = "file:///dev/null";
 
-  FCIORecordSizes sizes = {0};
-
-  written_bytes(NULL, 1);
+  FCIOWrittenBytes(NULL);
   FCIOStream stream = FCIOConnect(null_device, 'w', 0, 0);
-  sizes.protocol = written_bytes(stream, 0);
-
   size_t current_size = 0;
   int rc = 0;
 
-  rc = FCIOPutConfig(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.config = current_size;
-
-  rc = FCIOPutEvent(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.event = current_size;
-
-  rc = FCIOPutStatus(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.status = current_size;
-
-  rc = FCIOPutEventHeader(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.eventheader = current_size;
-
-  rc = FCIOPutSparseEvent(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.sparseevent = current_size;
+  sizes.protocol = FCIOWrittenBytes(stream);
 
   rc = FCIOPutFSPConfig(stream, processor);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
+  if ((current_size = FCIOWrittenBytes(stream)) && !rc)
     sizes.fspconfig = current_size;
 
   rc = FCIOPutFSPEvent(stream, fspstate);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
+  if ((current_size = FCIOWrittenBytes(stream)) && !rc)
     sizes.fspevent = current_size;
 
   rc = FCIOPutFSPStatus(stream, processor);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
+  if ((current_size = FCIOWrittenBytes(stream)) && !rc)
     sizes.fspstatus = current_size;
 
   FCIODisconnect(stream);
+
+  return sizes;
+}
+
+
+static inline size_t fspconfig_size(StreamProcessor* processor) {
+  const size_t frame_header = sizeof(int);
+  size_t total_size = 0;
+
+  total_size += frame_header; // tag_size
+  total_size += frame_header + sizeof(((FSPConfig){0}));
+
+  total_size += frame_header + sizeof(((FSPBuffer){0}).max_states);
+  total_size += frame_header + sizeof(((Timestamp){0}).seconds);
+  total_size += frame_header + sizeof(((Timestamp){0}).nanoseconds);
+
+  total_size += frame_header + sizeof(*((DSPHardwareMajority){0}).tracemap) * processor->dsp_hwm->ntraces;
+  total_size += frame_header + sizeof(*((DSPHardwareMajority){0}).fpga_energy_threshold_adc) * processor->dsp_hwm->ntraces;
+
+  total_size += frame_header + sizeof(*((DSPChannelThreshold){0}).tracemap) * processor->dsp_ct->ntraces;
+  total_size += frame_header + sizeof(*((DSPChannelThreshold){0}).thresholds) * processor->dsp_ct->ntraces;
+
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).apply_gain_scaling);
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).coincidence_window);
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).sum_window_start_sample);
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).sum_window_stop_sample);
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).coincidence_threshold);
+
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).tracemap) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).gains) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).thresholds) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).lowpass) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).shaping_widths) * processor->dsp_wps->ntraces;
+
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).dsp_pre_max_samples);
+  total_size += frame_header + sizeof(((DSPWindowedPeakSum){0}).dsp_post_max_samples);
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).dsp_pre_samples) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).dsp_post_samples) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).dsp_start_sample) * processor->dsp_wps->ntraces;
+  total_size += frame_header + sizeof(*((DSPWindowedPeakSum){0}).dsp_stop_sample) * processor->dsp_wps->ntraces;
+  return total_size;
+}
+
+static inline size_t fspevent_size(FSPState* fspstate) {
+  const size_t frame_header = sizeof(int);
+  size_t total_size = 0;
+
+  total_size += frame_header; // tag_size
+  total_size += frame_header + sizeof(FSPWriteFlags);
+  total_size += frame_header + sizeof(FSPProcessorFlags);
+  total_size += frame_header + sizeof(evt_obs);
+  total_size += frame_header + sizeof(hwm_obs);
+  total_size += frame_header + sizeof(wps_obs);
+
+  total_size += frame_header + sizeof(*((ct_obs){0}).trace_idx) * fspstate->obs.ct.multiplicity;
+  total_size += frame_header + sizeof(*((ct_obs){0}).max) * fspstate->obs.ct.multiplicity;
+  total_size += frame_header + sizeof(*((SubEventList){0}).start) * fspstate->obs.sub_event_list.size;
+  total_size += frame_header + sizeof(*((SubEventList){0}).stop) * fspstate->obs.sub_event_list.size;
+  total_size += frame_header + sizeof(*((SubEventList){0}).wps_max) * fspstate->obs.sub_event_list.size;
+
+  return total_size;
+}
+
+static inline size_t fspstatus_size(void) {
+  const size_t frame_header = sizeof(int);
+  size_t total_size = 0;
+
+  total_size += frame_header; // tag_size
+  total_size += frame_header + sizeof(FSPStats);
+
+  return total_size;
+}
+
+FCIORecordSizes FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes)
+{
+  sizes.fspconfig = fspconfig_size(processor);
+  sizes.fspevent = fspevent_size(fspstate);
+  sizes.fspstatus = fspstatus_size();
 
   return sizes;
 }

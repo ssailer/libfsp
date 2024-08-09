@@ -5,8 +5,9 @@
 #include <fcio.h>
 #include <time_utils.h>
 
-#include "record_processor.h"
-#include "processor.h"
+#include "fsp/buffer.h"
+#include "fsp/record_processor.h"
+#include "fsp/processor.h"
 
 
 void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags)
@@ -53,22 +54,23 @@ int FSPFreeStates(StreamProcessor* processor)
   return processor->buffer->max_states - processor->buffer->fill_level;
 }
 
-StreamProcessor* FSPCreate(void)
+StreamProcessor* FSPCreate(unsigned int buffer_depth)
 {
   StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
-
   processor->stats = calloc(1, sizeof(FSPStats));
 
-  processor->minimum_buffer_window.seconds = 0;
   processor->minimum_buffer_window.nanoseconds =
       (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
   processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
-  processor->stats->start_time = 0.0;    // reset, actual start time happens with the first record insertion.
+
+  FSPSetBufferSize(processor, buffer_depth);
+
+  processor->dsp_hwm = calloc(1, sizeof(DSPHardwareMajority));
+  processor->dsp_ct = calloc(1, sizeof(DSPChannelThreshold));
+  processor->dsp_wps = calloc(1, sizeof(DSPWindowedPeakSum));
+
   processor->hwm_prescale_timestamp.seconds = -1; // will init when it's needed
   processor->wps_prescale_timestamp.seconds = -1; // will init when it's needed
-
-  processor->hwm_prescale_ready_counter = 0; // start counters
-  processor->wps_prescale_ready_counter = 0; // start counters
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
   FSPEnableEventFlags(processor, (EventFlags){ .is_retrigger = 1, .is_extended = 1});
@@ -187,11 +189,12 @@ FSPState* FSPOutput(StreamProcessor* processor)
   return fsp_state;
 }
 
-int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
+int FSPSetBufferSize(StreamProcessor* processor, unsigned int buffer_depth) {
   if (processor->buffer) {
     FSPBufferDestroy(processor->buffer);
   }
-  if (buffer_depth < processor->minimum_buffer_depth) buffer_depth = processor->minimum_buffer_depth;
+  if (buffer_depth < processor->minimum_buffer_depth)
+    buffer_depth = processor->minimum_buffer_depth;
 
   Timestamp buffer_window = timestamp_greater(processor->minimum_buffer_window, processor->config.pre_trigger_window)
                                 ? processor->minimum_buffer_window
@@ -208,13 +211,6 @@ int FSPSetBufferSize(StreamProcessor* processor, int buffer_depth) {
   return buffer_depth;
 }
 
-static inline void fsp_init_stats(StreamProcessor* processor) {
-  FSPStats* stats = processor->stats;
-  if (stats->start_time == 0.0) {
-    stats->dt_logtime = stats->start_time = elapsed_time(0.0);
-  }
-}
-
 FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, int* timedout) {
   /*
   - check if buffered -> write
@@ -226,8 +222,6 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
   if (!processor || !reader) return NULL;
 
   if (!processor->buffer && FSPSetBufferSize(processor, reader->max_states - 1)) return NULL;
-
-  // fsp_init_stats(processor);
 
   FSPState* fsp_state = NULL;
   FCIOState* state = NULL;
