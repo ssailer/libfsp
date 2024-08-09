@@ -17,17 +17,7 @@ m_dep = cc.find_library('m', required : true)
 
 fcio_dep = dependency('fcio', fallback : ['fcio', 'fcio_dep'])
 
-fsp_inc = include_directories('src')
-fsp_sources = files(
-  'src/fsp/buffer.c',
-  'src/fsp/dsp.c',
-  'src/fsp/stats.c',
-  'src/fsp/timestamps.c',
-  'src/fsp/io.c',
-  'src/fsp/record_processor.c',
-  'src/fsp/processor.c',
-  'src/fsp_l200.c',
-)
+subdir('src')
 
 fsp_lib = library('fsp',
   fsp_sources,
@@ -38,24 +28,6 @@ fsp_lib = library('fsp',
 
 fsp_dep = declare_dependency(include_directories : fsp_inc, link_with : fsp_lib, sources : fsp_sources, dependencies : [fcio_dep, m_dep])
 
-install_headers(
-  'src/fsp/processor.h',
-  'src/fsp/timestamps.h',
-  'src/fsp/record_processor.h',
-  'src/fsp/dsp.h',
-  'src/fsp/buffer.h',
-  'src/fsp/state.h',
-  'src/fsp/stats.h',
-  'src/fsp/flags.h',
-  'src/fsp/observables.h',
-  'src/fsp/tracemap.h',
-  'src/fsp/io.h',
-  subdir : 'fsp'
-)
-install_headers(
-  'src/fsp.h',
-  'src/fsp_l200.h'
-)
 
 subdir('tests')
 

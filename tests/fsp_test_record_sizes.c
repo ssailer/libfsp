@@ -8,33 +8,6 @@
 
 #include "test.h"
 
-typedef struct {
-  size_t protocol;
-  size_t config;
-  size_t event;
-  size_t sparseevent;
-  size_t eventheader;
-  size_t status;
-  size_t fspconfig;
-  size_t fspevent;
-  size_t fspstatus;
-
-} FCIORecordSizes;
-
-size_t written_bytes(FCIOStream stream, int reset)
-{
-  static size_t written = 0;
-  if (reset) {
-    written = 0;
-    return 0;
-  }
-  tmio_stream* tmio = (tmio_stream*)stream;
-
-  size_t new = tmio->byteswritten - written;
-  written = tmio->byteswritten;
-  return new;
-}
-
 void print_sizes(FCIORecordSizes sizes)
 {
   fprintf(stderr, "..protocol    %zu bytes\n", sizes.protocol);
@@ -47,57 +20,6 @@ void print_sizes(FCIORecordSizes sizes)
   fprintf(stderr, "..fspevent    %zu bytes\n", sizes.fspevent);
   fprintf(stderr, "..fspstatus   %zu bytes\n", sizes.fspstatus);
 }
-
-FCIORecordSizes measure_stream_sizes(FCIOData* data, StreamProcessor* processor, FSPState* fspstate)
-{
-  const char* null_device = "file:///dev/null";
-
-  FCIORecordSizes sizes = {0};
-
-  written_bytes(NULL, 1);
-  FCIOStream stream = FCIOConnect(null_device, 'w', 0, 0);
-  sizes.protocol = written_bytes(stream, 0);
-
-  size_t current_size = 0;
-  int rc = 0;
-
-  rc = FCIOPutConfig(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.config = current_size;
-
-  rc = FCIOPutEvent(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.event = current_size;
-
-  rc = FCIOPutStatus(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.status = current_size;
-
-  rc = FCIOPutEventHeader(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.eventheader = current_size;
-
-  rc = FCIOPutSparseEvent(stream, data);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.sparseevent = current_size;
-
-  rc = FCIOPutFSPConfig(stream, processor);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.fspconfig = current_size;
-
-  rc = FCIOPutFSPEvent(stream, fspstate);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.fspevent = current_size;
-
-  rc = FCIOPutFSPStatus(stream, processor);
-  if ((current_size = written_bytes(stream, 0)) && !rc)
-    sizes.fspstatus = current_size;
-
-  FCIODisconnect(stream);
-
-  return sizes;
-}
-
 
 static inline size_t event_size(FCIOTag tag, const fcio_event* event, const fcio_config* config)
 {
@@ -223,7 +145,7 @@ static inline size_t fspevent_size(FSPState* fspstate)
   return total_size;
 }
 
-static inline size_t fspstatus_size()
+static inline size_t fspstatus_size(void)
 {
   const size_t frame_header = sizeof(int);
   size_t total_size = 0;
@@ -236,10 +158,10 @@ static inline size_t fspstatus_size()
 
 FCIORecordSizes calculate_stream_sizes(FCIOData* data, StreamProcessor* processor, FSPState* fspstate)
 {
-
+  const size_t frame_header = sizeof(int);
   FCIORecordSizes sizes = {0};
 
-  sizes.protocol = 68;
+  sizes.protocol = TMIO_PROTOCOL_SIZE + frame_header;
   sizes.config = config_size(&data->config);
   sizes.event = event_size(FCIOEvent, &data->event, &data->config);
   sizes.status = status_size(&data->status);
@@ -295,7 +217,7 @@ void set_parameters(FCIOData* data, StreamProcessor* processor, FSPState* fspsta
 void check(FCIOData* data, StreamProcessor* processor, FSPState* fspstate, unsigned int nchannels, unsigned int nsamples, int verbose) {
 
   set_parameters(data, processor, fspstate, nchannels, nsamples, verbose);
-  FCIORecordSizes measured_sizes = measure_stream_sizes(data, processor, fspstate);
+  FCIORecordSizes measured_sizes = FSPMeasureRecordSizes(data, processor, fspstate);
   FCIORecordSizes calculated_sizes = calculate_stream_sizes(data, processor, fspstate);
 
   if (verbose) {
@@ -339,7 +261,6 @@ int main(int argc, char* argv[])
   check(data, processor, fspstate, 181, 6144, verbose); // lgnd better
   check(data, processor, fspstate, 181, 32768, verbose); // lgnd fft
   check(data, processor, fspstate, 576, FCIOMaxSamples, verbose); // max 16-bit
-
 
   free(data);
   FSPFreeStreamProcessor(processor);
