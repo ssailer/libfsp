@@ -1,5 +1,6 @@
 #include "fsp/io_fcio.h"
 
+#include <fcio_utils.h>
 #include <threads.h>
 #include <tmio.h>
 
@@ -266,32 +267,32 @@ int FCIOPutFSP(FCIOStream output, StreamProcessor* processor)
   }
 }
 
-FCIORecordSizes FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes)
+void FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes* sizes)
 {
-  const char* null_device = "file:///dev/null";
+  if (!processor || !fspstate || !sizes)
+    return;
 
+  const char* null_device = "file:///dev/null";
   FCIOWrittenBytes(NULL);
   FCIOStream stream = FCIOConnect(null_device, 'w', 0, 0);
   size_t current_size = 0;
   int rc = 0;
 
-  sizes.protocol = FCIOWrittenBytes(stream);
+  sizes->protocol = FCIOWrittenBytes(stream);
 
   rc = FCIOPutFSPConfig(stream, processor);
   if ((current_size = FCIOWrittenBytes(stream)) && !rc)
-    sizes.fspconfig = current_size;
+    sizes->fspconfig = current_size;
 
   rc = FCIOPutFSPEvent(stream, fspstate);
   if ((current_size = FCIOWrittenBytes(stream)) && !rc)
-    sizes.fspevent = current_size;
+    sizes->fspevent = current_size;
 
   rc = FCIOPutFSPStatus(stream, processor);
   if ((current_size = FCIOWrittenBytes(stream)) && !rc)
-    sizes.fspstatus = current_size;
+    sizes->fspstatus = current_size;
 
   FCIODisconnect(stream);
-
-  return sizes;
 }
 
 
@@ -363,11 +364,12 @@ static inline size_t fspstatus_size(void) {
   return total_size;
 }
 
-FCIORecordSizes FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes)
+void FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes* sizes)
 {
-  sizes.fspconfig = fspconfig_size(processor);
-  sizes.fspevent = fspevent_size(fspstate);
-  sizes.fspstatus = fspstatus_size();
+  if (!processor || !fspstate || !sizes)
+    return;
 
-  return sizes;
+  sizes->fspconfig = fspconfig_size(processor);
+  sizes->fspevent = fspevent_size(fspstate);
+  sizes->fspstatus = fspstatus_size();
 }

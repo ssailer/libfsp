@@ -4,8 +4,8 @@
 #include <fcio.h>
 #include <fcio_utils.h>
 
-FCIORecordSizes FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes);
-FCIORecordSizes FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes sizes);
+void FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes* sizes);
+void FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes* sizes);
 
 int FCIOGetFSPEvent(FCIOData* input, FSPState* fsp_state);
 int FCIOGetFSPConfig(FCIOData* input, StreamProcessor* processor);

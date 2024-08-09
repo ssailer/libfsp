@@ -43,8 +43,8 @@ void check(StreamProcessor* processor, FSPState* fspstate, unsigned int nchannel
   set_parameters(processor, fspstate, nchannels, verbose);
   FCIORecordSizes measured_sizes = {0};
   FCIORecordSizes calculated_sizes = {0};
-  measured_sizes = FSPMeasureRecordSizes(processor, fspstate, measured_sizes);
-  calculated_sizes = FSPCalculateRecordSizes(processor, fspstate, calculated_sizes);
+  FSPMeasureRecordSizes(processor, fspstate, &measured_sizes);
+  FSPCalculateRecordSizes(processor, fspstate, &calculated_sizes);
 
   if (verbose) {
     fprintf(stderr, "measured:\n");
