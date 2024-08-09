@@ -1,6 +1,6 @@
 BUILDDIR:=build
 
-.PHONY: setup compile install uninstall clean
+.PHONY: setup compile install uninstall clean debug release coverage
 
 all: compile
 
@@ -16,6 +16,10 @@ compile: $(BUILDDIR)
 local: $(BUILDDIR)
 	meson configure -Dprefix=${HOME}/.local $(BUILDDIR)
 
+debug release: $(BUILDDIR)
+	meson configure --buildtype $@ $(BUILDDIR)
+	$(MAKE) compile
+
 install: compile
 	meson install -C $(BUILDDIR)
 
@@ -24,3 +28,8 @@ uninstall:
 
 test:
 	meson test -C $(BUILDDIR) -v --suite fsp
+
+coverage: $(BUILDDIR)
+	meson configure -Db_coverage=true $(BUILDDIR)
+	$(MAKE) test
+	ninja coverage -C $(BUILDDIR)
