@@ -1,7 +1,7 @@
 #pragma once
 
-#include "fsp/state.h"
-#include "fsp/processor.h"
+#include "state.h"
+#include "processor.h"
 
 #include <fcio.h>
 

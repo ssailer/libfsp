@@ -1,8 +1,8 @@
 #pragma once
 
-#include "fsp/timestamps.h"
-#include "fsp/flags.h"
-#include "fsp/observables.h"
+#include "timestamps.h"
+#include "flags.h"
+#include "observables.h"
 
 #include <fcio.h>
 

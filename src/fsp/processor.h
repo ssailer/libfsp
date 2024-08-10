@@ -1,10 +1,10 @@
 #pragma once
 
-#include "fsp/timestamps.h"
-#include "fsp/flags.h"
-#include "fsp/stats.h"
-#include "fsp/buffer.h"
-#include "fsp/dsp.h"
+#include "timestamps.h"
+#include "flags.h"
+#include "stats.h"
+#include "buffer.h"
+#include "dsp.h"
 
 #define FC_MAXTICKS 249999999
 

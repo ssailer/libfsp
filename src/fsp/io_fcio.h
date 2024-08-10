@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fsp/processor.h"
+#include "processor.h"
 #include <fcio.h>
 #include <fcio_utils.h>
 
