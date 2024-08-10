@@ -5,9 +5,9 @@
 #include <fcio.h>
 #include <time_utils.h>
 
-#include "fsp/buffer.h"
-#include "fsp/record_processor.h"
-#include "fsp/processor.h"
+#include "buffer.h"
+#include "record_processor.h"
+#include "processor.h"
 
 
 void FSPEnableTriggerFlags(StreamProcessor* processor, STFlags flags)

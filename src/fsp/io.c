@@ -1,7 +1,7 @@
 #include "io.h"
-#include "fsp/buffer.h"
-#include "fsp/dsp.h"
-#include "fsp/processor.h"
+#include "buffer.h"
+#include "dsp.h"
+#include "processor.h"
 
 #include <assert.h>
 #include <stdlib.h>

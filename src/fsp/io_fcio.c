@@ -1,4 +1,4 @@
-#include "fsp/io_fcio.h"
+#include "io_fcio.h"
 
 #include <fcio_utils.h>
 #include <tmio.h>
