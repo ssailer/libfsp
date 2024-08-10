@@ -1,7 +1,6 @@
 #include "fsp/io_fcio.h"
 
 #include <fcio_utils.h>
-#include <threads.h>
 #include <tmio.h>
 
 static inline int fcio_put_fspconfig_buffer(FCIOStream stream, FSPBuffer* buffer) {
