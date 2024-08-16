@@ -66,8 +66,11 @@ StreamProcessor* FSPCreate(unsigned int buffer_depth)
   FSPSetBufferSize(processor, buffer_depth);
 
   processor->dsp_hwm = calloc(1, sizeof(DSPHardwareMajority));
+  processor->dsp_hwm->enabled = 0;
   processor->dsp_ct = calloc(1, sizeof(DSPChannelThreshold));
+  processor->dsp_ct->enabled = 0;
   processor->dsp_wps = calloc(1, sizeof(DSPWindowedPeakSum));
+  processor->dsp_wps->enabled = 0;
 
   processor->hwm_prescale_timestamp.seconds = -1; // will init when it's needed
   processor->wps_prescale_timestamp.seconds = -1; // will init when it's needed

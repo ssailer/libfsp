@@ -54,6 +54,8 @@ typedef struct WindowedPeakSumConfig {
   int *channel_pulses;
   int *total_pulses;
 
+  int enabled;
+
 } DSPWindowedPeakSum;
 
 typedef struct HardwareMajorityConfig {
@@ -69,6 +71,8 @@ typedef struct HardwareMajorityConfig {
   unsigned short max_value; // the largest channel hw value
   unsigned short min_value; // the smallest channel hw value, but > 0
 
+  int enabled;
+
 } DSPHardwareMajority;
 
 typedef struct ChannelThresholdConfig {
@@ -80,6 +84,9 @@ typedef struct ChannelThresholdConfig {
   unsigned short max_values[FCIOMaxChannels];
   int max_tracemap_idx[FCIOMaxChannels];
   int multiplicity;
+
+  int enabled;
+
 } DSPChannelThreshold;
 
 /* Differentiates trace, searches for gain adjusted peaks above threshold. Peaks are stored in peak_trace.*/

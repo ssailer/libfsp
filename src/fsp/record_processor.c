@@ -325,14 +325,14 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       write_flags.event = fsp_evt_flags(processor, state);
       fsp_state->obs.evt.nextension = 0; // it's the default, process_timings will increase the number if retriggers are following
 
-      if (hwm_cfg) {
+      if (hwm_cfg->enabled) {
         proc_flags.hwm = fsp_swt_hardware_majority(processor, state, fsp_state->timestamp);
         fsp_state->obs.hwm.multiplicity = hwm_cfg->multiplicity;
         fsp_state->obs.hwm.max_value = hwm_cfg->max_value;
         fsp_state->obs.hwm.min_value = hwm_cfg->min_value;
       }
 
-      if (ct_cfg) {
+      if (ct_cfg->enabled) {
         proc_flags.ct = fsp_swt_channel_thresholds(processor, state);
         fsp_state->obs.ct.multiplicity = ct_cfg->multiplicity;
 
@@ -343,7 +343,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
         }
       }
 
-      if (wps_cfg) {
+      if (wps_cfg->enabled) {
         processor->dsp_wps->sub_event_list = &fsp_state->obs.sub_event_list; //load current trigger_list into config struct
         proc_flags.wps = fsp_swt_windowed_peak_sum(processor, state, fsp_state->timestamp);
         fsp_state->obs.wps.max_value = wps_cfg->max_peak_sum_value;

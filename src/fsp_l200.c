@@ -28,6 +28,8 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
   ct_cfg->thresholds[2] = muon_level_adc;
   ct_cfg->ntraces = 3;
 
+  ct_cfg->enabled = 1;
+
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG FSP_L200_SetAuxParameters\n");
     for (int i = 0; i < ct_cfg->ntraces; i++) {
@@ -76,6 +78,8 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
     fprintf(stderr, "CRITICAL Ge prescale_ratio needs to be >= 0 is %d\n", prescale_ratio);
     return 0;
   }
+
+  fmc->enabled = 1;
 
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG FSP_L200_SetGeParameters\n");
@@ -187,6 +191,8 @@ int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* c
     wps_cfg->dsp_post_samples[i] = fsp_dsp_diff_and_smooth_post_samples(shaping_width_samples[i], wps_cfg->lowpass[i]);
     if (wps_cfg->dsp_post_samples[i] > wps_cfg->dsp_post_max_samples) wps_cfg->dsp_post_max_samples = wps_cfg->dsp_post_samples[i];
   }
+
+  wps_cfg->enabled = 1;
 
   if (processor->loglevel >= 4) {
     /* DEBUGGING enabled, print all inputs */
