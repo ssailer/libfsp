@@ -237,33 +237,31 @@ int FCIOPutFSPStatus(FCIOStream output, StreamProcessor* processor)
   return FCIOFlush(output);
 }
 
-int FCIOPutFSP(FCIOStream output, StreamProcessor* processor)
+int FCIOPutFSP(FCIOStream output, StreamProcessor* processor, int tag)
 {
 
-  if (!output
-    || !processor
-    || !processor->buffer
-    || !processor->buffer->last_fsp_state
-    || !processor->buffer->last_fsp_state->state
-  )
+  if (!output || !processor)
     return -1;
 
-  switch (processor->buffer->last_fsp_state->state->last_tag) {
+  if (tag == 0)
+    tag = processor->buffer->last_fsp_state->state->last_tag;
+
+  switch (tag) {
     case FCIOConfig:
-    return FCIOPutFSPConfig(output, processor);
+    case FCIOFSPConfig:
+      return FCIOPutFSPConfig(output, processor);
 
     case FCIOEvent:
     case FCIOSparseEvent:
     case FCIOEventHeader:
-    return FCIOPutFSPEvent(output, processor->buffer->last_fsp_state);
+    case FCIOFSPEvent:
+      return FCIOPutFSPEvent(output, processor->buffer->last_fsp_state);
 
     case FCIOStatus:
-    return FCIOPutFSPStatus(output, processor);
-
-    default:
-    // unknown tag
-    return 1;
+    case FCIOFSPStatus:
+      return FCIOPutFSPStatus(output, processor);
   }
+  return -2;
 }
 
 void FSPMeasureRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCIORecordSizes* sizes)

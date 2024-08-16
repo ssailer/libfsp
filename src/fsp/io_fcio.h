@@ -15,4 +15,4 @@ int FCIOPutFSPConfig(FCIOStream output, StreamProcessor* processor);
 int FCIOPutFSPEvent(FCIOStream output, FSPState* fsp_state);
 int FCIOPutFSPStatus(FCIOStream output, StreamProcessor* processor);
 
-int FCIOPutFSP(FCIOStream output, StreamProcessor* processor);
+int FCIOPutFSP(FCIOStream output, StreamProcessor* processor, int tag);
