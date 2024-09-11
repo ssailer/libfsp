@@ -26,3 +26,7 @@ install_headers(
   'fsp/io.h',
   subdir : 'fsp'
 )
+
+install_headers(
+  'fsp.h'
+)
