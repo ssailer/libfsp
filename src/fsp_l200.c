@@ -21,15 +21,20 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
   ct_cfg->tracemap_format = format;
   ct_cfg->ntraces = 0;
 
-  if (pulser_channel >= 0 && pulser_level_adc > 0) {
-    ct_cfg->tracemap[0] = pulser_channel;
-    ct_cfg->thresholds[0] = pulser_level_adc;
-    ct_cfg->ntraces++;
+  for (int i = 0; i < FCIOMaxChannels; i++) {
+    ct_cfg->tracemap[i] = -1;
+    ct_cfg->thresholds[i] = 0;
   }
 
   if (baseline_channel >= 0 && baseline_level_adc > 0) {
-    ct_cfg->tracemap[1] = baseline_channel;
-    ct_cfg->thresholds[1] = baseline_level_adc;
+    ct_cfg->tracemap[0] = baseline_channel;
+    ct_cfg->thresholds[0] = baseline_level_adc;
+    ct_cfg->ntraces++;
+  }
+
+  if (pulser_channel >= 0 && pulser_level_adc > 0) {
+    ct_cfg->tracemap[1] = pulser_channel;
+    ct_cfg->thresholds[1] = pulser_level_adc;
     ct_cfg->ntraces++;
   }
 
@@ -205,7 +210,7 @@ int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* c
 
   if (enable_muon_coincidence) {
     int ct_indices[1];
-    ct_indices[0] = 2; // see Set Aux Channels
+    ct_indices[0] = 2; // see Set Aux Channels, tracemap idx 2 should be muon channel
     FSPSetWPSReferences(processor, (HWMFlags){.multiplicity_threshold = 1}, (CTFlags){0}, (WPSFlags){0}, ct_indices, 1);
   }
 
