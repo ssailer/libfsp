@@ -1,11 +1,10 @@
 #include <stdlib.h>
-#include <unistd.h>
 
 #include <fsp/io_fcio.h>
 #include "fsp/processor.h"
 
-#include "fsp_test_utils.h"
 #include "test.h"
+#include "fsp_test_utils.h"
 
 #define FCIODEBUG 0
 int main(int argc, char* argv[])
