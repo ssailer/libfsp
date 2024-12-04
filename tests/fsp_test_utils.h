@@ -120,13 +120,6 @@ int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
   assert(0 == memcmp(&left->triggerconfig.wps_reference_flags_wps, &right->triggerconfig.wps_reference_flags_wps, sizeof(WPSFlags)));
   assert(left->triggerconfig.n_wps_reference_tracemap_indices == right->triggerconfig.n_wps_reference_tracemap_indices);
   assert(0 == memcmp(&left->triggerconfig.wps_reference_tracemap_index, &right->triggerconfig.wps_reference_tracemap_index, FCIOMaxChannels * sizeof(int)));
-  fprintf(stderr, "%d | %d = %d\n", left->triggerconfig.hwm_threshold, right->triggerconfig.hwm_threshold, left->triggerconfig.hwm_threshold == right->triggerconfig.hwm_threshold);
-  fprintf(stderr, "%d | %d = %d\n", left->triggerconfig.hwm_prescale_ratio, right->triggerconfig.hwm_prescale_ratio, left->triggerconfig.hwm_prescale_ratio == right->triggerconfig.hwm_prescale_ratio);
-  fprintf(stderr, "%d | %d = %d\n", left->triggerconfig.wps_prescale_ratio, right->triggerconfig.wps_prescale_ratio, left->triggerconfig.wps_prescale_ratio == right->triggerconfig.wps_prescale_ratio);
-  fprintf(stderr, "%f | %f = %d\n", left->triggerconfig.relative_wps_threshold, right->triggerconfig.relative_wps_threshold, left->triggerconfig.relative_wps_threshold == right->triggerconfig.relative_wps_threshold);
-  fprintf(stderr, "%f | %f = %d\n", left->triggerconfig.absolute_wps_threshold, right->triggerconfig.absolute_wps_threshold, left->triggerconfig.absolute_wps_threshold == right->triggerconfig.absolute_wps_threshold);
-  fprintf(stderr, "%f | %f = %d\n", left->triggerconfig.wps_prescale_rate, right->triggerconfig.wps_prescale_rate, left->triggerconfig.wps_prescale_rate == right->triggerconfig.wps_prescale_rate);
-  fprintf(stderr, "%f | %f = %d\n", left->triggerconfig.hwm_prescale_rate, right->triggerconfig.hwm_prescale_rate, left->triggerconfig.hwm_prescale_rate == right->triggerconfig.hwm_prescale_rate);
 
   assert(left->buffer->max_states == right->buffer->max_states)
   assert(left->buffer->buffer_window.seconds == right->buffer->buffer_window.seconds)

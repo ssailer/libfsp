@@ -19,9 +19,11 @@ void print_sizes(FCIORecordSizes sizes)
 
 void set_parameters(StreamProcessor* processor, FSPState* fspstate, unsigned int nchannels, int verbose)
 {
+
   processor->dsp_hwm->ntraces = (nchannels) * 3 / 5;
   processor->dsp_wps->ntraces = (nchannels) * 2 / 5;
   processor->dsp_ct->ntraces = nchannels - processor->dsp_hwm->ntraces - processor->dsp_wps->ntraces;
+  processor->triggerconfig.n_wps_reference_tracemap_indices = processor->dsp_ct->ntraces / 2;
 
   fspstate->obs.ct.multiplicity = processor->dsp_ct->ntraces;
   fspstate->obs.sub_event_list.size = 2;
@@ -46,6 +48,7 @@ void check(StreamProcessor* processor, FSPState* fspstate, unsigned int nchannel
   FSPCalculateRecordSizes(processor, fspstate, &calculated_sizes);
 
   if (verbose) {
+    fprintf(stderr, "nadcs %u:\n", nchannels);
     fprintf(stderr, "measured:\n");
     print_sizes(measured_sizes);
     fprintf(stderr, "calculated:\n");
@@ -53,6 +56,7 @@ void check(StreamProcessor* processor, FSPState* fspstate, unsigned int nchannel
     fprintf(stderr, "\n");
   }
 
+  assert(measured_sizes.protocol == calculated_sizes.protocol);
   assert(measured_sizes.fspconfig == calculated_sizes.fspconfig);
   assert(measured_sizes.fspevent == calculated_sizes.fspevent);
   assert(measured_sizes.fspstatus == calculated_sizes.fspstatus);

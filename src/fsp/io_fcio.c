@@ -368,7 +368,7 @@ static inline size_t fspconfig_size(StreamProcessor* processor) {
   total_size += frame_header + sizeof(((FSPTriggerConfig){0}).wps_reference_flags_hwm);
   total_size += frame_header + sizeof(((FSPTriggerConfig){0}).wps_reference_flags_ct);
   total_size += frame_header + sizeof(((FSPTriggerConfig){0}).wps_reference_flags_wps);
-  total_size += frame_header + sizeof(((FSPTriggerConfig){0}).wps_reference_tracemap_index) * processor->triggerconfig.n_wps_reference_tracemap_indices;
+  total_size += frame_header + sizeof(*((FSPTriggerConfig){0}).wps_reference_tracemap_index) * processor->triggerconfig.n_wps_reference_tracemap_indices;
 
   total_size += frame_header + sizeof(((FSPBuffer){0}).max_states);
   total_size += frame_header + sizeof(((Timestamp){0}).seconds);
@@ -436,6 +436,7 @@ void FSPCalculateRecordSizes(StreamProcessor* processor, FSPState* fspstate, FCI
   if (!processor || !fspstate || !sizes)
     return;
 
+  sizes->protocol = sizeof(int) + TMIO_PROTOCOL_SIZE;
   sizes->fspconfig = fspconfig_size(processor);
   sizes->fspevent = fspevent_size(fspstate);
   sizes->fspstatus = fspstatus_size();
