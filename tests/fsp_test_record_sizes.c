@@ -20,12 +20,12 @@ void print_sizes(FCIORecordSizes sizes)
 void set_parameters(StreamProcessor* processor, FSPState* fspstate, unsigned int nchannels, int verbose)
 {
 
-  processor->dsp_hwm->ntraces = (nchannels) * 3 / 5;
-  processor->dsp_wps->ntraces = (nchannels) * 2 / 5;
-  processor->dsp_ct->ntraces = nchannels - processor->dsp_hwm->ntraces - processor->dsp_wps->ntraces;
-  processor->triggerconfig.n_wps_reference_tracemap_indices = processor->dsp_ct->ntraces / 2;
+  processor->dsp_hwm.tracemap.n_mapped = (nchannels) * 3 / 5;
+  processor->dsp_wps.tracemap.n_mapped = (nchannels) * 2 / 5;
+  processor->dsp_ct.tracemap.n_mapped = nchannels - processor->dsp_hwm.tracemap.n_mapped - processor->dsp_wps.tracemap.n_mapped;
+  processor->triggerconfig.n_wps_ref_map_idx = processor->dsp_ct.tracemap.n_mapped / 2;
 
-  fspstate->obs.ct.multiplicity = processor->dsp_ct->ntraces;
+  fspstate->obs.ct.multiplicity = processor->dsp_ct.tracemap.n_mapped;
   fspstate->obs.sub_event_list.size = 2;
 
   if (verbose) {
@@ -34,7 +34,7 @@ void set_parameters(StreamProcessor* processor, FSPState* fspstate, unsigned int
       "fspevent: ct.multiplicity %d sub_event_list.size %d\n"
       "fspconfig: hwm.ntraces %d wps.ntraces %d ct.ntraces %d\n",
       fspstate->obs.ct.multiplicity, fspstate->obs.sub_event_list.size,
-      processor->dsp_hwm->ntraces, processor->dsp_wps->ntraces, processor->dsp_ct->ntraces
+      processor->dsp_hwm.tracemap.n_mapped, processor->dsp_wps.tracemap.n_mapped, processor->dsp_ct.tracemap.n_mapped
     );
   }
 }

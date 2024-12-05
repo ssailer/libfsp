@@ -23,11 +23,11 @@ typedef struct {
   Timestamp pre_trigger_window;
   Timestamp post_trigger_window;
 
-  HWMFlags wps_reference_flags_hwm;
-  CTFlags wps_reference_flags_ct;
-  WPSFlags wps_reference_flags_wps;
-  int n_wps_reference_tracemap_indices;
-  int wps_reference_tracemap_index[FCIOMaxChannels];
+  HWMFlags wps_ref_flags_hwm;
+  CTFlags wps_ref_flags_ct;
+  WPSFlags wps_ref_flags_wps;
+  int n_wps_ref_map_idx;
+  int wps_ref_map_idx[FCIOMaxChannels];
 
 } FSPTriggerConfig;
 
@@ -61,10 +61,10 @@ typedef struct StreamProcessor {
   unsigned int minimum_buffer_depth;
   FSPBuffer *buffer;
 
-  DSPWindowedPeakSum *dsp_wps;
-  DSPHardwareMajority *dsp_hwm;
-  DSPChannelThreshold *dsp_ct;
-  FSPStats *stats;
+  DSPWindowedPeakSum dsp_wps;
+  DSPHardwareMajority dsp_hwm;
+  DSPChannelThreshold dsp_ct;
+  FSPStats stats;
 
 } StreamProcessor;
 

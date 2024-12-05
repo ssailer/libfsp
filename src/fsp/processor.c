@@ -23,16 +23,16 @@ void FSPEnableEventFlags(StreamProcessor* processor, EventFlags flags)
   if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPEnableEventFlags: %llu\n", (unsigned long long)flags.is_flagged);
 }
 
-void FSPSetWPSReferences(StreamProcessor* processor, HWMFlags hwm_flags, CTFlags ct_flags, WPSFlags wps_flags, int* ct_tracemap_index, int n_ct_tracemap_indices)
+void FSPSetWPSReferences(StreamProcessor* processor, HWMFlags hwm_flags, CTFlags ct_flags, WPSFlags wps_flags, int* ct_map_idx, int n_ct_map_idx)
 {
-  processor->triggerconfig.wps_reference_flags_hwm = hwm_flags;
-  processor->triggerconfig.wps_reference_flags_ct = ct_flags;
-  processor->triggerconfig.wps_reference_flags_wps = wps_flags;
-  if (ct_tracemap_index && n_ct_tracemap_indices > 0) {
-    for (int i = 0; i < n_ct_tracemap_indices; i++) {
-      processor->triggerconfig.wps_reference_tracemap_index[i] = ct_tracemap_index[i];
+  processor->triggerconfig.wps_ref_flags_hwm = hwm_flags;
+  processor->triggerconfig.wps_ref_flags_ct = ct_flags;
+  processor->triggerconfig.wps_ref_flags_wps = wps_flags;
+  if (ct_map_idx && n_ct_map_idx >= 0) {
+    for (int i = 0; i < n_ct_map_idx; i++) {
+      processor->triggerconfig.wps_ref_map_idx[i] = ct_map_idx[i];
     }
-    processor->triggerconfig.n_wps_reference_tracemap_indices = n_ct_tracemap_indices;
+    processor->triggerconfig.n_wps_ref_map_idx = n_ct_map_idx;
   }
   if (processor->loglevel >= 4) fprintf(stderr, "DEBUG FSPSetWPSReferenceFlags: hwm %llu ct %llu wps %llu\n", (unsigned long long)hwm_flags.is_flagged, (unsigned long long)ct_flags.is_flagged, (unsigned long long)wps_flags.is_flagged);
 }
@@ -44,7 +44,7 @@ void FSPSetLogLevel(StreamProcessor* processor, int loglevel)
 
 void FSPSetLogTime(StreamProcessor* processor, double log_time)
 {
-  processor->stats->log_time = log_time;
+  processor->stats.log_time = log_time;
 }
 
 int FSPFlush(StreamProcessor* processor)
@@ -64,7 +64,6 @@ int FSPFreeStates(StreamProcessor* processor)
 StreamProcessor* FSPCreate(unsigned int buffer_depth)
 {
   StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
-  processor->stats = calloc(1, sizeof(FSPStats));
 
   processor->minimum_buffer_window.nanoseconds =
       (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
@@ -72,12 +71,20 @@ StreamProcessor* FSPCreate(unsigned int buffer_depth)
 
   FSPSetBufferSize(processor, buffer_depth);
 
-  processor->dsp_hwm = calloc(1, sizeof(DSPHardwareMajority));
-  processor->dsp_hwm->enabled = 0;
-  processor->dsp_ct = calloc(1, sizeof(DSPChannelThreshold));
-  processor->dsp_ct->enabled = 0;
-  processor->dsp_wps = calloc(1, sizeof(DSPWindowedPeakSum));
-  processor->dsp_wps->enabled = 0;
+  processor->dsp_hwm.enabled = 0;
+  processor->dsp_ct.enabled = 0;
+  processor->dsp_wps.enabled = 0;
+
+  for (int i = 0; i < FCIOMaxChannels; i++) {
+    processor->dsp_hwm.tracemap.trace_list[i] = -1;
+    processor->dsp_hwm.tracemap.enabled[i] = -1;
+
+    processor->dsp_ct.tracemap.trace_list[i] = -1;
+    processor->dsp_ct.tracemap.enabled[i] = -1;
+
+    processor->dsp_wps.tracemap.trace_list[i] = -1;
+    processor->dsp_wps.tracemap.enabled[i] = -1;
+  }
 
   processor->hwm_prescale_timestamp.seconds = -1; // will init when it's needed
   processor->wps_prescale_timestamp.seconds = -1; // will init when it's needed
@@ -98,10 +105,6 @@ void FSPDestroy(StreamProcessor* processor)
 {
   if (processor) {
     FSPBufferDestroy(processor->buffer);
-    free(processor->stats);
-    free(processor->dsp_hwm);
-    free(processor->dsp_wps);
-    free(processor->dsp_ct);
   }
   free(processor);
 }
