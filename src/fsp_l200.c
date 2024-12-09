@@ -20,21 +20,24 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
 
   ct_cfg->tracemap.format = format;
 
-  if (baseline_channel >= 0 && baseline_level_adc > 0) {
-    ct_cfg->tracemap.trace_list[0] = baseline_channel;
-    ct_cfg->thresholds[0] = baseline_level_adc;
+  if (pulser_channel >= 0 && pulser_level_adc > 0) {
+    ct_cfg->tracemap.trace_list[0] = pulser_channel;
+    ct_cfg->thresholds[0] = pulser_level_adc;
+    ct_cfg->label[0] = 'P';
     ct_cfg->tracemap.n_mapped++;
   }
 
-  if (pulser_channel >= 0 && pulser_level_adc > 0) {
-    ct_cfg->tracemap.trace_list[1] = pulser_channel;
-    ct_cfg->thresholds[1] = pulser_level_adc;
+  if (baseline_channel >= 0 && baseline_level_adc > 0) {
+    ct_cfg->tracemap.trace_list[1] = baseline_channel;
+    ct_cfg->thresholds[1] = baseline_level_adc;
+    ct_cfg->label[1] = 'B';
     ct_cfg->tracemap.n_mapped++;
   }
 
   if (muon_channel >= 0 && muon_level_adc > 0) {
     ct_cfg->tracemap.trace_list[2] = muon_channel;
     ct_cfg->thresholds[2] = muon_level_adc;
+    ct_cfg->label[2] = 'M';
     ct_cfg->tracemap.n_mapped++;
   }
 

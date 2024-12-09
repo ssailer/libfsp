@@ -65,6 +65,7 @@ static inline int fcio_put_fspconfig_ct(FCIOStream stream, DSPChannelThreshold* 
     return -1;
   fcio_put_fsp_tracemap(stream, &dsp_ct->tracemap);
   FCIOWriteUShorts(stream, dsp_ct->tracemap.n_mapped, dsp_ct->thresholds);
+  FCIOWrite(stream, dsp_ct->tracemap.n_mapped, dsp_ct->label);
 
   return 0;
 }
@@ -161,6 +162,7 @@ static inline int fcio_get_fspconfig_ct(FCIOStream in, DSPChannelThreshold* dsp_
     return -1;
   fcio_get_fsp_tracemap(in, &dsp_ct->tracemap);
   FCIOReadUShorts(in, FCIOMaxChannels, dsp_ct->thresholds);
+  FCIORead(in, FCIOMaxChannels, dsp_ct->label);
 
   return 0;
 }
