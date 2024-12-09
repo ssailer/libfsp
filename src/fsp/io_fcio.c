@@ -1,8 +1,8 @@
 #include "io_fcio.h"
-#include "fsp/dsp.h"
-#include "fsp/processor.h"
-#include "fsp/state.h"
-#include "fsp/timestamps.h"
+#include "dsp.h"
+#include "processor.h"
+#include "state.h"
+#include "timestamps.h"
 
 #include <fcio_utils.h>
 #include <tmio.h>
