@@ -12,7 +12,7 @@
 
 static inline void write_sequence(char* data, size_t size) {
   for (size_t i = 0; i < size; i++) {
-    *(data+i) = i;
+    *(data+i) = (char)i;
   }
 }
 
