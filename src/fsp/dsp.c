@@ -418,7 +418,7 @@ void fsp_dsp_windowed_peak_sum(DSPWindowedPeakSum *cfg, int nsamples, int num_tr
     if (cfg->tracemap.enabled[trace_idx] < 0)
       continue;
     int map_idx = cfg->tracemap.enabled[trace_idx];
-    assert(trace_idx == cfg->tracemap.trace_list[map_idx]);
+    assert(trace_idx == cfg->tracemap.map[map_idx]);
 
     unsigned short *trace = traces[trace_idx];
     assert(nsamples + (4 * (cfg->shaping_widths[map_idx] + 1) <= 3 * FCIOMaxSamples));
@@ -481,7 +481,7 @@ void fsp_dsp_hardware_majority(DSPHardwareMajority *cfg, int num_traces, unsigne
     if (cfg->tracemap.enabled[trace_idx] < 0)
       continue;
     int map_idx = cfg->tracemap.enabled[trace_idx];
-    assert(trace_idx == cfg->tracemap.trace_list[map_idx]);
+    assert(trace_idx == cfg->tracemap.map[map_idx]);
 
     /* FCIO Trace Header 1 contains fpga_energy */
     unsigned short fpga_energy = trace_headers[trace_idx][1];
@@ -534,7 +534,7 @@ void fsp_dsp_channel_threshold(DSPChannelThreshold* cfg, int nsamples, int num_t
     if (cfg->tracemap.enabled[trace_idx] < 0)
       continue;
     int map_idx = cfg->tracemap.enabled[trace_idx];
-    assert(trace_idx == cfg->tracemap.trace_list[map_idx]);
+    assert(trace_idx == cfg->tracemap.map[map_idx]);
 
     unsigned short *trace = traces[trace_idx];
     unsigned short baseline = theaders[trace_idx][0];

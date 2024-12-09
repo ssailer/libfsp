@@ -337,7 +337,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
         for (int i = 0, n = 0; i < ct_cfg->tracemap.n_mapped && n < ct_cfg->multiplicity; i++) {
           if (ct_cfg->max_values[i]) {
-            int trace_idx = ct_cfg->tracemap.trace_list[i];
+            int trace_idx = ct_cfg->tracemap.map[i];
             fsp_state->obs.ct.max[n] = ct_cfg->max_values[i];
             fsp_state->obs.ct.trace_idx[n] = trace_idx;
             n++;
@@ -360,7 +360,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
             int map_idx = processor->triggerconfig.wps_ref_map_idx[i];
             if (ct_cfg->max_values[map_idx]) {
                 proc_flags.wps.rel_reference = 1;
-                break; // stop at first found, don't need check for more
+                break; // stop at first found, don't need to check for more
             }
           }
         }
@@ -395,12 +395,12 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
     case FCIOConfig: {
       if (processor->dsp_ct.enabled) {
-        ct_cfg->tracemap.n_traces = state->config->adcs;
+        ct_cfg->tracemap.n_enabled = state->config->adcs;
         if (convert2traceidx(&processor->dsp_ct.tracemap, state->config->tracemap)) {
           if (processor->loglevel >= 4) {
             for (int i = 0; i < processor->dsp_ct.tracemap.n_mapped; i++) {
               fprintf(stderr, "DEBUG conversion channel threshold trace index %d\n",
-                      processor->dsp_ct.tracemap.trace_list[i]);
+                      processor->dsp_ct.tracemap.map[i]);
             }
           }
         } else {
@@ -409,11 +409,11 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       }
 
       if (processor->dsp_wps.enabled) {
-        wps_cfg->tracemap.n_traces = state->config->adcs;
+        wps_cfg->tracemap.n_enabled = state->config->adcs;
         if (convert2traceidx(&processor->dsp_wps.tracemap, state->config->tracemap)) {
           if (processor->loglevel >= 4) {
             for (int i = 0; i < processor->dsp_wps.tracemap.n_mapped; i++) {
-              fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->dsp_wps.tracemap.trace_list[i]);
+              fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->dsp_wps.tracemap.map[i]);
             }
           }
         } else {
@@ -466,12 +466,12 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       }
 
       if (processor->dsp_hwm.enabled) {
-        hwm_cfg->tracemap.n_traces = state->config->adcs;
+        hwm_cfg->tracemap.n_enabled = state->config->adcs;
         if (convert2traceidx(&processor->dsp_hwm.tracemap, state->config->tracemap)) {
           if (processor->loglevel >= 4) {
             for (int i = 0; i < processor->dsp_hwm.tracemap.n_mapped; i++) {
               fprintf(stderr, "DEBUG conversion hw majority trace index %d\n",
-                      processor->dsp_hwm.tracemap.trace_list[i]);
+                      processor->dsp_hwm.tracemap.map[i]);
             }
           }
         } else {

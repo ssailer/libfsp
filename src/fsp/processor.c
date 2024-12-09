@@ -65,24 +65,27 @@ StreamProcessor* FSPCreate(unsigned int buffer_depth)
 {
   StreamProcessor* processor = calloc(1, sizeof(StreamProcessor));
 
-  processor->minimum_buffer_window.nanoseconds =
-      (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
-  processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
-
+  if (buffer_depth) { // buffer_depth == 0 disables buffered processing
+    processor->minimum_buffer_window.nanoseconds =
+        (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
+    processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
+  }
+  // FSPSetBuffer re-allocates the buffer, which always contains a state at index 0
   FSPSetBufferSize(processor, buffer_depth);
+  processor->fsp_state = &processor->buffer->fsp_states[0];
 
   processor->dsp_hwm.enabled = 0;
   processor->dsp_ct.enabled = 0;
   processor->dsp_wps.enabled = 0;
 
   for (int i = 0; i < FCIOMaxChannels; i++) {
-    processor->dsp_hwm.tracemap.trace_list[i] = -1;
+    processor->dsp_hwm.tracemap.map[i] = -1;
     processor->dsp_hwm.tracemap.enabled[i] = -1;
 
-    processor->dsp_ct.tracemap.trace_list[i] = -1;
+    processor->dsp_ct.tracemap.map[i] = -1;
     processor->dsp_ct.tracemap.enabled[i] = -1;
 
-    processor->dsp_wps.tracemap.trace_list[i] = -1;
+    processor->dsp_wps.tracemap.map[i] = -1;
     processor->dsp_wps.tracemap.enabled[i] = -1;
   }
 
@@ -92,6 +95,7 @@ StreamProcessor* FSPCreate(unsigned int buffer_depth)
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
   FSPEnableEventFlags(processor, (EventFlags){ .is_retrigger = 1, .is_extended = 1});
   FSPEnableTriggerFlags(processor, (TriggerFlags){ .hwm_multiplicity = 1, .hwm_prescaled = 1, .wps_abs = 1, .wps_rel = 1, .wps_prescaled = 1, .ct_multiplicity = 1} );
+
   HWMFlags ref_hwm = {0};
   ref_hwm.multiplicity_threshold = 1;
   CTFlags ref_ct = {0};
@@ -266,6 +270,8 @@ FSPState* FSPGetNextState(StreamProcessor* processor, FCIOStateReader* reader, i
       nfree = FSPInput(processor,state);  // got a valid state
     }
   }
+
+  processor->fsp_state = fsp_state;
 
   return fsp_state;
 }

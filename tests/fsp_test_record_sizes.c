@@ -39,13 +39,13 @@ void set_parameters(StreamProcessor* processor, FSPState* fspstate, unsigned int
   }
 }
 
-void check(StreamProcessor* processor, FSPState* fspstate, unsigned int nchannels, int verbose) {
+void check(StreamProcessor* processor, unsigned int nchannels, int verbose) {
 
-  set_parameters(processor, fspstate, nchannels, verbose);
+  set_parameters(processor, processor->fsp_state, nchannels, verbose);
   FCIORecordSizes measured_sizes = {0};
   FCIORecordSizes calculated_sizes = {0};
-  FSPMeasureRecordSizes(processor, fspstate, &measured_sizes);
-  FSPCalculateRecordSizes(processor, fspstate, &calculated_sizes);
+  FSPMeasureRecordSizes(processor, &measured_sizes);
+  FSPCalculateRecordSizes(processor, &calculated_sizes);
 
   if (verbose) {
     fprintf(stderr, "nadcs %u:\n", nchannels);
@@ -69,16 +69,14 @@ int main(int argc, char* argv[])
     verbose = atoi(argv[1]);
 
   StreamProcessor* processor = FSPCreate(0);
-  FSPState* fspstate = calloc(1, sizeof(FSPState));
 
-  check(processor, fspstate, 0, verbose); // min
-  check(processor, fspstate, 1, verbose); // min
-  check(processor, fspstate, 181, verbose); // lgnd
-  check(processor, fspstate, 576, verbose); // max 16-bit
-  check(processor, fspstate, 2304, verbose); // max 12-bit
+  check(processor, 0, verbose); // min
+  check(processor, 1, verbose); // min
+  check(processor, 181, verbose); // lgnd
+  check(processor, 576, verbose); // max 16-bit
+  check(processor, 2304, verbose); // max 12-bit
 
   FSPDestroy(processor);
-  free(fspstate);
 
   return 0;
 }

@@ -41,14 +41,14 @@ void fill_default_fspconfig(StreamProcessor* proc)
   write_sequence((char*)&proc->buffer->buffer_window, sizeof(proc->buffer->buffer_window));
 
   proc->dsp_hwm.tracemap.n_mapped = FCIOMaxChannels;
-  proc->dsp_hwm.tracemap.n_traces = FCIOMaxChannels;
-  write_sequence((char*)&proc->dsp_hwm.tracemap.trace_list, sizeof(proc->dsp_hwm.tracemap.trace_list));
+  proc->dsp_hwm.tracemap.n_enabled = FCIOMaxChannels;
+  write_sequence((char*)&proc->dsp_hwm.tracemap.map, sizeof(proc->dsp_hwm.tracemap.map));
   write_sequence((char*)&proc->dsp_hwm.tracemap.enabled, sizeof(proc->dsp_hwm.tracemap.enabled));
   write_sequence((char*)&proc->dsp_hwm.fpga_energy_threshold_adc, sizeof(proc->dsp_hwm.fpga_energy_threshold_adc));
 
   proc->dsp_ct.tracemap.n_mapped = FCIOMaxChannels;
-  proc->dsp_ct.tracemap.n_traces = FCIOMaxChannels;
-  write_sequence((char*)&proc->dsp_ct.tracemap.trace_list, sizeof(proc->dsp_ct.tracemap.trace_list));
+  proc->dsp_ct.tracemap.n_enabled = FCIOMaxChannels;
+  write_sequence((char*)&proc->dsp_ct.tracemap.map, sizeof(proc->dsp_ct.tracemap.map));
   write_sequence((char*)&proc->dsp_ct.tracemap.enabled, sizeof(proc->dsp_ct.tracemap.enabled));
   write_sequence((char*)&proc->dsp_ct.thresholds, sizeof(proc->dsp_ct.thresholds));
 
@@ -60,8 +60,8 @@ void fill_default_fspconfig(StreamProcessor* proc)
   proc->dsp_wps.coincidence_threshold = 10.0;
 
   proc->dsp_wps.tracemap.n_mapped = FCIOMaxChannels;
-  proc->dsp_wps.tracemap.n_traces = FCIOMaxChannels;
-  write_sequence((char*)&proc->dsp_wps.tracemap.trace_list, sizeof(proc->dsp_wps.tracemap.trace_list));
+  proc->dsp_wps.tracemap.n_enabled = FCIOMaxChannels;
+  write_sequence((char*)&proc->dsp_wps.tracemap.map, sizeof(proc->dsp_wps.tracemap.map));
   write_sequence((char*)&proc->dsp_wps.tracemap.enabled, sizeof(proc->dsp_wps.tracemap.enabled));
   write_sequence((char*)&proc->dsp_wps.gains, sizeof(proc->dsp_wps.gains));
   write_sequence((char*)&proc->dsp_wps.thresholds, sizeof(proc->dsp_wps.thresholds));
@@ -131,19 +131,19 @@ int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
   assert(left->buffer->buffer_window.seconds == right->buffer->buffer_window.seconds)
   assert(left->buffer->buffer_window.nanoseconds == right->buffer->buffer_window.nanoseconds)
 
-  assert(left->dsp_hwm.tracemap.n_traces == right->dsp_hwm.tracemap.n_traces);
+  assert(left->dsp_hwm.tracemap.n_enabled == right->dsp_hwm.tracemap.n_enabled);
   assert(left->dsp_hwm.tracemap.n_mapped == right->dsp_hwm.tracemap.n_mapped);
-  assert(0 == memcmp(left->dsp_hwm.tracemap.trace_list, right->dsp_hwm.tracemap.trace_list, FCIOMaxChannels * sizeof(int)));
+  assert(0 == memcmp(left->dsp_hwm.tracemap.map, right->dsp_hwm.tracemap.map, FCIOMaxChannels * sizeof(int)));
   assert(0 == memcmp(left->dsp_hwm.fpga_energy_threshold_adc, right->dsp_hwm.fpga_energy_threshold_adc, FCIOMaxChannels * sizeof(unsigned short)));
 
-  assert(left->dsp_ct.tracemap.n_traces == right->dsp_ct.tracemap.n_traces);
+  assert(left->dsp_ct.tracemap.n_enabled == right->dsp_ct.tracemap.n_enabled);
   assert(left->dsp_ct.tracemap.n_mapped == right->dsp_ct.tracemap.n_mapped);
-  assert(0 == memcmp(left->dsp_ct.tracemap.trace_list, right->dsp_ct.tracemap.trace_list,FCIOMaxChannels * sizeof(int)));
+  assert(0 == memcmp(left->dsp_ct.tracemap.map, right->dsp_ct.tracemap.map,FCIOMaxChannels * sizeof(int)));
   assert(0 == memcmp(left->dsp_ct.thresholds, right->dsp_ct.thresholds, FCIOMaxChannels * sizeof(unsigned short)));
 
-  assert(left->dsp_wps.tracemap.n_traces == right->dsp_wps.tracemap.n_traces);
+  assert(left->dsp_wps.tracemap.n_enabled == right->dsp_wps.tracemap.n_enabled);
   assert(left->dsp_wps.tracemap.n_mapped == right->dsp_wps.tracemap.n_mapped);
-  assert(0 == memcmp(left->dsp_wps.tracemap.trace_list, right->dsp_wps.tracemap.trace_list,FCIOMaxChannels * sizeof(int)));
+  assert(0 == memcmp(left->dsp_wps.tracemap.map, right->dsp_wps.tracemap.map,FCIOMaxChannels * sizeof(int)));
 
   assert(left->dsp_wps.apply_gain_scaling == right->dsp_wps.apply_gain_scaling);
   assert(left->dsp_wps.coincidence_window == right->dsp_wps.coincidence_window);

@@ -21,21 +21,21 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
   ct_cfg->tracemap.format = format;
 
   if (pulser_channel >= 0 && pulser_level_adc > 0) {
-    ct_cfg->tracemap.trace_list[0] = pulser_channel;
+    ct_cfg->tracemap.map[0] = pulser_channel;
     ct_cfg->thresholds[0] = pulser_level_adc;
     ct_cfg->label[0] = 'P';
     ct_cfg->tracemap.n_mapped++;
   }
 
   if (baseline_channel >= 0 && baseline_level_adc > 0) {
-    ct_cfg->tracemap.trace_list[1] = baseline_channel;
+    ct_cfg->tracemap.map[1] = baseline_channel;
     ct_cfg->thresholds[1] = baseline_level_adc;
     ct_cfg->label[1] = 'B';
     ct_cfg->tracemap.n_mapped++;
   }
 
   if (muon_channel >= 0 && muon_level_adc > 0) {
-    ct_cfg->tracemap.trace_list[2] = muon_channel;
+    ct_cfg->tracemap.map[2] = muon_channel;
     ct_cfg->thresholds[2] = muon_level_adc;
     ct_cfg->label[2] = 'M';
     ct_cfg->tracemap.n_mapped++;
@@ -47,9 +47,9 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
     fprintf(stderr, "DEBUG FSP_L200_SetAuxParameters\n");
     for (int i = 0; i < ct_cfg->tracemap.n_mapped; i++) {
       if (ct_cfg->tracemap.format == FCIO_TRACE_MAP_FORMAT) {
-        fprintf(stderr, "DEBUG channel   0x%x level_adc %d\n", ct_cfg->tracemap.trace_list[i], ct_cfg->thresholds[i]);
+        fprintf(stderr, "DEBUG channel   0x%x level_adc %d\n", ct_cfg->tracemap.map[i], ct_cfg->thresholds[i]);
       } else {
-        fprintf(stderr, "DEBUG channel   %d level_adc %d\n", ct_cfg->tracemap.trace_list[i], ct_cfg->thresholds[i]);
+        fprintf(stderr, "DEBUG channel   %d level_adc %d\n", ct_cfg->tracemap.map[i], ct_cfg->thresholds[i]);
       }
     }
   }
@@ -74,7 +74,7 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
   hwm->tracemap.n_mapped = nchannels;
 
   for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++) {
-    hwm->tracemap.trace_list[i] = channelmap[i];
+    hwm->tracemap.map[i] = channelmap[i];
     hwm->fpga_energy_threshold_adc[i] = ge_prescale_threshold_adc[i];
   }
   hwm->fast = skip_full_counting;
@@ -101,9 +101,9 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
     fprintf(stderr, "DEBUG channelmap_format  %d : %s\n", hwm->tracemap.format, channelmap_fmt2str(format));
     for (int i = 0; i < hwm->tracemap.n_mapped; i++) {
       if (hwm->tracemap.format == FCIO_TRACE_MAP_FORMAT) {
-        fprintf(stderr, "DEBUG channel 0x%x\n", hwm->tracemap.trace_list[i]);
+        fprintf(stderr, "DEBUG channel 0x%x\n", hwm->tracemap.map[i]);
       } else {
-        fprintf(stderr, "DEBUG channel %d\n", hwm->tracemap.trace_list[i]);
+        fprintf(stderr, "DEBUG channel %d\n", hwm->tracemap.map[i]);
       }
     }
   }
@@ -165,7 +165,7 @@ int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* c
   wps->dsp_pre_max_samples = 0;
   wps->dsp_post_max_samples = 0;
   for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++) {
-    wps->tracemap.trace_list[i] = channelmap[i];
+    wps->tracemap.map[i] = channelmap[i];
 
     if (calibration_pe_adc[i] >= 0) {
       wps->gains[i] = calibration_pe_adc[i];
@@ -230,12 +230,12 @@ int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* c
         fprintf(
             stderr,
             "DEBUG channel 0x%x gain %f threshold %f shaping %d lowpass %f dsp_pre_samples %d dsp_post_samples %d\n",
-            wps->tracemap.trace_list[i], wps->gains[i], wps->thresholds[i], wps->shaping_widths[i], wps->lowpass[i],
+            wps->tracemap.map[i], wps->gains[i], wps->thresholds[i], wps->shaping_widths[i], wps->lowpass[i],
             wps->dsp_pre_samples[i], wps->dsp_post_samples[i]);
       } else {
         fprintf(stderr,
                 "DEBUG channel %d gain %f threshold %f shaping %d lowpass %f dsp_pre_samples %d dsp_post_samples %d\n",
-                wps->tracemap.trace_list[i], wps->gains[i], wps->thresholds[i], wps->shaping_widths[i], wps->lowpass[i],
+                wps->tracemap.map[i], wps->gains[i], wps->thresholds[i], wps->shaping_widths[i], wps->lowpass[i],
                 wps->dsp_pre_samples[i], wps->dsp_post_samples[i]);
       }
     }
