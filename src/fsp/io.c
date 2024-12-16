@@ -110,7 +110,7 @@ void FSPFlags2Char(FSPState* fsp_state, size_t strlen, char* cstring) {
     case FCIOSparseEvent:
       cstring[curr_offset++] = 'Z';
       break;
-    case FCIOEventHEader:
+    case FCIOEventHeader:
       cstring[curr_offset++] = 'H';
       break;
     case FCIORecEvent:
