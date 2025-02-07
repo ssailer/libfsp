@@ -18,12 +18,12 @@ static inline void write_sequence(char* data, size_t size) {
 
 void fill_default_fspconfig(StreamProcessor* proc)
 {
-  write_sequence((char*)&proc->triggerconfig.hwm_threshold, sizeof(proc->triggerconfig.hwm_threshold));
+  write_sequence((char*)&proc->triggerconfig.hwm_min_multiplicity, sizeof(proc->triggerconfig.hwm_min_multiplicity));
   write_sequence((char*)&proc->triggerconfig.hwm_prescale_ratio, sizeof(proc->triggerconfig.hwm_prescale_ratio));
   write_sequence((char*)&proc->triggerconfig.wps_prescale_ratio, sizeof(proc->triggerconfig.wps_prescale_ratio));
 
-  write_sequence((char*)&proc->triggerconfig.relative_wps_threshold, sizeof(proc->triggerconfig.relative_wps_threshold));
-  write_sequence((char*)&proc->triggerconfig.absolute_wps_threshold, sizeof(proc->triggerconfig.absolute_wps_threshold));
+  write_sequence((char*)&proc->triggerconfig.wps_coincident_sum_threshold, sizeof(proc->triggerconfig.wps_coincident_sum_threshold));
+  write_sequence((char*)&proc->triggerconfig.wps_sum_threshold, sizeof(proc->triggerconfig.wps_sum_threshold));
   write_sequence((char*)&proc->triggerconfig.wps_prescale_rate, sizeof(proc->triggerconfig.wps_prescale_rate));
   write_sequence((char*)&proc->triggerconfig.hwm_prescale_rate, sizeof(proc->triggerconfig.hwm_prescale_rate));
 
@@ -54,10 +54,10 @@ void fill_default_fspconfig(StreamProcessor* proc)
 
 
   proc->dsp_wps.apply_gain_scaling = 1;
-  proc->dsp_wps.coincidence_window = FCIOMaxSamples/2;
+  proc->dsp_wps.sum_window_size = FCIOMaxSamples/2;
   proc->dsp_wps.sum_window_start_sample = 0;
   proc->dsp_wps.sum_window_stop_sample = FCIOMaxSamples;
-  proc->dsp_wps.coincidence_threshold = 10.0;
+  proc->dsp_wps.sub_event_sum_threshold = 10.0;
 
   proc->dsp_wps.tracemap.n_mapped = FCIOMaxChannels;
   proc->dsp_wps.tracemap.n_enabled = FCIOMaxChannels;
@@ -68,11 +68,11 @@ void fill_default_fspconfig(StreamProcessor* proc)
   write_sequence((char*)&proc->dsp_wps.lowpass, sizeof(proc->dsp_wps.lowpass));
   write_sequence((char*)&proc->dsp_wps.shaping_widths, sizeof(proc->dsp_wps.shaping_widths));
 
-  proc->dsp_wps.dsp_pre_max_samples = 3;
-  proc->dsp_wps.dsp_post_max_samples = 3;
+  proc->dsp_wps.dsp_max_margin_front = 3;
+  proc->dsp_wps.dsp_max_margin_back = 3;
 
-  write_sequence((char*)&proc->dsp_wps.dsp_pre_samples, sizeof(proc->dsp_wps.dsp_pre_samples));
-  write_sequence((char*)&proc->dsp_wps.dsp_post_samples, sizeof(proc->dsp_wps.dsp_post_samples));
+  write_sequence((char*)&proc->dsp_wps.dsp_margin_front, sizeof(proc->dsp_wps.dsp_margin_front));
+  write_sequence((char*)&proc->dsp_wps.dsp_margin_back, sizeof(proc->dsp_wps.dsp_margin_back));
   write_sequence((char*)&proc->dsp_wps.dsp_start_sample, sizeof(proc->dsp_wps.dsp_start_sample));
   write_sequence((char*)&proc->dsp_wps.dsp_stop_sample, sizeof(proc->dsp_wps.dsp_stop_sample));
 
@@ -111,11 +111,11 @@ int is_same_fspstatus(StreamProcessor *left, StreamProcessor *right)
 
 int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
 {
-  assert(left->triggerconfig.hwm_threshold == right->triggerconfig.hwm_threshold);
+  assert(left->triggerconfig.hwm_min_multiplicity == right->triggerconfig.hwm_min_multiplicity);
   assert(left->triggerconfig.hwm_prescale_ratio == right->triggerconfig.hwm_prescale_ratio);
   assert(left->triggerconfig.wps_prescale_ratio == right->triggerconfig.wps_prescale_ratio);
-  assert(left->triggerconfig.relative_wps_threshold == right->triggerconfig.relative_wps_threshold);
-  assert(left->triggerconfig.absolute_wps_threshold == right->triggerconfig.absolute_wps_threshold);
+  assert(left->triggerconfig.wps_coincident_sum_threshold == right->triggerconfig.wps_coincident_sum_threshold);
+  assert(left->triggerconfig.wps_sum_threshold == right->triggerconfig.wps_sum_threshold);
   assert(left->triggerconfig.wps_prescale_rate == right->triggerconfig.wps_prescale_rate);
   assert(left->triggerconfig.hwm_prescale_rate == right->triggerconfig.hwm_prescale_rate);
   assert(0 == memcmp(&left->triggerconfig.enabled_flags, &right->triggerconfig.enabled_flags, sizeof(FSPWriteFlags)));
@@ -146,20 +146,20 @@ int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
   assert(0 == memcmp(left->dsp_wps.tracemap.map, right->dsp_wps.tracemap.map,FCIOMaxChannels * sizeof(int)));
 
   assert(left->dsp_wps.apply_gain_scaling == right->dsp_wps.apply_gain_scaling);
-  assert(left->dsp_wps.coincidence_window == right->dsp_wps.coincidence_window);
+  assert(left->dsp_wps.sum_window_size == right->dsp_wps.sum_window_size);
   assert(left->dsp_wps.sum_window_start_sample == right->dsp_wps.sum_window_start_sample);
   assert(left->dsp_wps.sum_window_stop_sample == right->dsp_wps.sum_window_stop_sample);
-  assert(left->dsp_wps.coincidence_threshold == right->dsp_wps.coincidence_threshold);
-  assert(left->dsp_wps.dsp_pre_max_samples == right->dsp_wps.dsp_pre_max_samples);
-  assert(left->dsp_wps.dsp_post_max_samples == right->dsp_wps.dsp_post_max_samples);
+  assert(left->dsp_wps.sub_event_sum_threshold == right->dsp_wps.sub_event_sum_threshold);
+  assert(left->dsp_wps.dsp_max_margin_front == right->dsp_wps.dsp_max_margin_front);
+  assert(left->dsp_wps.dsp_max_margin_back == right->dsp_wps.dsp_max_margin_back);
   assert(left->dsp_wps.apply_gain_scaling == right->dsp_wps.apply_gain_scaling);
 
   assert(0 == memcmp(left->dsp_wps.gains, right->dsp_wps.gains, FCIOMaxChannels * sizeof(float)));
   assert(0 == memcmp(left->dsp_wps.thresholds, right->dsp_wps.thresholds, FCIOMaxChannels * sizeof(float)));
   assert(0 == memcmp(left->dsp_wps.lowpass, right->dsp_wps.lowpass, FCIOMaxChannels * sizeof(float)));
   assert(0 == memcmp(left->dsp_wps.shaping_widths, right->dsp_wps.shaping_widths, FCIOMaxChannels*  sizeof(int)));
-  assert(0 == memcmp(left->dsp_wps.dsp_pre_samples, right->dsp_wps.dsp_pre_samples, FCIOMaxChannels * sizeof(int)));
-  assert(0 == memcmp(left->dsp_wps.dsp_post_samples, right->dsp_wps.dsp_post_samples, FCIOMaxChannels * sizeof(int)));
+  assert(0 == memcmp(left->dsp_wps.dsp_margin_front, right->dsp_wps.dsp_margin_front, FCIOMaxChannels * sizeof(int)));
+  assert(0 == memcmp(left->dsp_wps.dsp_margin_back, right->dsp_wps.dsp_margin_back, FCIOMaxChannels * sizeof(int)));
   assert(0 == memcmp(left->dsp_wps.dsp_start_sample, right->dsp_wps.dsp_start_sample, FCIOMaxChannels * sizeof(int)));
   assert(0 == memcmp(left->dsp_wps.dsp_stop_sample, right->dsp_wps.dsp_stop_sample, FCIOMaxChannels * sizeof(int)));
 
