@@ -80,9 +80,6 @@ static inline EventFlags fsp_evt_flags(StreamProcessor* processor, FCIOState* st
   // FCIOStateReader* reader = processor->buffer->reader;
   /*
   Determine if:
-  - pulser event
-  - baseline event
-  - muon event
   - consecutive event
   */
   EventFlags evtflags = {0};
