@@ -165,7 +165,7 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
 
   HWMFlags hwmflags = {0};
 
-  fsp_dsp_hardware_majority(&processor->dsp_hwm, event->num_traces, event->trace_list, event->theader);
+  fsp_dsp_hardware_majority(&processor->dsp_hwm, processor->triggerconfig.hwm_prescale_ratio, event->num_traces, event->trace_list, event->theader);
 
   if (processor->dsp_hwm.multiplicity >= processor->triggerconfig.hwm_min_multiplicity) {
     hwmflags.multiplicity_threshold = 1;
@@ -180,11 +180,8 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
   }
 
   if (hwmflags.multiplicity_below) {
-    processor->hwm_prescale_ready_counter++;
-    if (processor->triggerconfig.hwm_prescale_ratio > 0) {
-      if ((processor->hwm_prescale_ready_counter % processor->triggerconfig.hwm_prescale_ratio) == 0) {
-        hwmflags.prescaled = 1;
-      }
+    if (processor->triggerconfig.hwm_prescale_ratio > 0 && processor->dsp_hwm.n_prescaled > 0) {
+      hwmflags.prescaled = 1;
     }
     else if (processor->triggerconfig.hwm_prescale_rate > 0.0) {
       if (processor->hwm_prescale_timestamp.seconds == -1) {
