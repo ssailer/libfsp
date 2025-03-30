@@ -149,8 +149,7 @@ static inline int convert2traceidx(FSPTraceMap* map, unsigned int *fcio_tracemap
     case FCIO_TRACE_INDEX_FORMAT: {
       for (int i = 0; i < map->n_mapped; i++) {
         if (map->map[i] < FCIOMaxChannels && fcio_tracemap[map->map[i]]) {
-          map->map[i] = i;
-          map->enabled[i] = i;
+          map->enabled[map->map[i]] = i;
         } else {
           return 0;
         }
