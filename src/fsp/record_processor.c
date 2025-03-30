@@ -397,8 +397,6 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                       processor->dsp_ct.tracemap.map[i]);
             }
           }
-        } else {
-          return -1;
         }
       }
 
@@ -410,11 +408,10 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
               fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->dsp_wps.tracemap.map[i]);
             }
           }
-        } else {
+        } else if (processor->loglevel >= 2){
           fprintf(stderr,
-                  "CRITICAL fsp_process_fcio_state: during conversion of peak sum channels, one channel could not "
+                  "WARNING fsp_process_fcio_state: during conversion of peak sum channels, one channel could not "
                   "be mapped.\n");
-          return -1;
         }
 
         if (wps_cfg->sum_window_stop_sample < 0)
@@ -468,11 +465,10 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                       processor->dsp_hwm.tracemap.map[i]);
             }
           }
-        } else {
+        } else if (processor->loglevel >= 2) {
           fprintf(stderr,
-                  "CRITICAL fsp_process_fcio_state: during conversion of hw majority channels, one channel could "
+                  "WARNING fsp_process_fcio_state: during conversion of hw majority channels, one channel could "
                   "not be mapped.\n");
-          return -1;
         }
       }
 

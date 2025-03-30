@@ -470,7 +470,7 @@ void fsp_dsp_windowed_peak_sum(DSPWindowedPeakSum *cfg, int nsamples, int num_tr
   cfg->max_peak_offset = total_largest_peak_offset;
 }
 
-void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, int prescale_ratio, unsigned short* trace_list, unsigned short **trace_headers) {
+void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int prescale_ratio, int num_traces, unsigned short* trace_list, unsigned short **trace_headers) {
 
   int multiplicity = 0;
   int mult_below_threshold = 0;
