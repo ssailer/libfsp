@@ -493,8 +493,6 @@ void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, uns
 
       if (fpga_energy < min) min = fpga_energy;
       if (fpga_energy > max) max = fpga_energy;
-
-      if (cfg->fast) break;
     }
   }
 
