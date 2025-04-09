@@ -61,7 +61,6 @@ typedef struct DSPHardwareMultiplicity {
   FSPTraceMap tracemap;
   unsigned short fpga_energy_threshold_adc[FCIOMaxChannels];
 
-  int fast;
   /* result fields */
   int multiplicity; // multiplicity of hardware energy values
   int n_below_minimum_multiplicity; // counts the number of channels below fpga_energy_threshold_adc but > 0

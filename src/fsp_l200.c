@@ -57,7 +57,7 @@ int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format,
 }
 
 int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* channelmap, FSPTraceFormat format,
-                       int majority_threshold, int skip_full_counting, unsigned short* ge_prescale_threshold_adc,
+                       int majority_threshold, unsigned short* ge_prescale_threshold_adc,
                        int prescale_ratio) {
 
   DSPHardwareMultiplicity* hwm = &processor->dsp_hwm;
@@ -77,7 +77,6 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
     hwm->tracemap.map[i] = channelmap[i];
     hwm->fpga_energy_threshold_adc[i] = ge_prescale_threshold_adc[i];
   }
-  hwm->fast = skip_full_counting;
   if (majority_threshold >= 0)
     processor->triggerconfig.hwm_min_multiplicity = majority_threshold;
   else {
@@ -97,7 +96,6 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
     fprintf(stderr, "DEBUG FSP_L200_SetGeParameters\n");
     fprintf(stderr, "DEBUG majority_threshold %d\n", majority_threshold);
     fprintf(stderr, "DEBUG prescale_ratio     %d\n", prescale_ratio);
-    fprintf(stderr, "DEBUG skip_full_counting %d\n", hwm->fast);
     fprintf(stderr, "DEBUG channelmap_format  %d : %s\n", hwm->tracemap.format, channelmap_fmt2str(format));
     for (int i = 0; i < hwm->tracemap.n_mapped; i++) {
       if (hwm->tracemap.format == FCIO_TRACE_MAP_FORMAT) {
