@@ -87,9 +87,10 @@ StreamProcessor* FSPCreate(unsigned int buffer_depth)
 
     processor->dsp_wps.tracemap.map[i] = -1;
     processor->dsp_wps.tracemap.enabled[i] = -1;
+    
+    processor->triggerconfig.hwm_prescale_timestamp[i].seconds = -1; // will init when it's needed
   }
 
-  processor->hwm_prescale_timestamp.seconds = -1; // will init when it's needed
   processor->wps_prescale_timestamp.seconds = -1; // will init when it's needed
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
@@ -97,7 +98,7 @@ StreamProcessor* FSPCreate(unsigned int buffer_depth)
   FSPEnableTriggerFlags(processor, (TriggerFlags){ .hwm_multiplicity = 1, .hwm_prescaled = 1, .wps_sum = 1, .wps_coincident_sum = 1, .wps_prescaled = 1, .ct_multiplicity = 1} );
 
   HWMFlags ref_hwm = {0};
-  ref_hwm.multiplicity_threshold = 1;
+  ref_hwm.sw_multiplicity = 1;
   CTFlags ref_ct = {0};
   WPSFlags ref_wps = {0};
   FSPSetWPSReferences(processor, ref_hwm, ref_ct, ref_wps, NULL, 0);
@@ -144,13 +145,11 @@ static inline void fsp_derive_triggerflags(StreamProcessor* processor, FSPState*
   /*
     This function calculates the trigger flag fields from the individual processor flags
   */
-  if (processor->triggerconfig.enabled_flags.trigger.hwm_multiplicity && fsp_state->proc_flags.hwm.multiplicity_threshold)
+  if (processor->triggerconfig.enabled_flags.trigger.hwm_multiplicity && fsp_state->proc_flags.hwm.sw_multiplicity)
     fsp_state->write_flags.trigger.hwm_multiplicity = 1;
 
-  if (processor->triggerconfig.enabled_flags.trigger.hwm_prescaled && fsp_state->proc_flags.hwm.prescaled) {
-    fsp_state->write_flags.trigger.hwm_multiplicity = 0;
+  if (processor->triggerconfig.enabled_flags.trigger.hwm_prescaled && fsp_state->proc_flags.hwm.prescaled)
     fsp_state->write_flags.trigger.hwm_prescaled = 1;
-  }
 
   if (processor->triggerconfig.enabled_flags.trigger.ct_multiplicity && fsp_state->proc_flags.ct.multiplicity)
     fsp_state->write_flags.trigger.ct_multiplicity = 1;

@@ -19,13 +19,11 @@ static inline void write_sequence(char* data, size_t size) {
 void fill_default_fspconfig(StreamProcessor* proc)
 {
   write_sequence((char*)&proc->triggerconfig.hwm_min_multiplicity, sizeof(proc->triggerconfig.hwm_min_multiplicity));
-  write_sequence((char*)&proc->triggerconfig.hwm_prescale_ratio, sizeof(proc->triggerconfig.hwm_prescale_ratio));
+  // write_sequence((char*)&proc->triggerconfig.hwm_prescale_ratio, sizeof(proc->triggerconfig.hwm_prescale_ratio));
   write_sequence((char*)&proc->triggerconfig.wps_prescale_ratio, sizeof(proc->triggerconfig.wps_prescale_ratio));
 
   write_sequence((char*)&proc->triggerconfig.wps_coincident_sum_threshold, sizeof(proc->triggerconfig.wps_coincident_sum_threshold));
   write_sequence((char*)&proc->triggerconfig.wps_sum_threshold, sizeof(proc->triggerconfig.wps_sum_threshold));
-  write_sequence((char*)&proc->triggerconfig.wps_prescale_rate, sizeof(proc->triggerconfig.wps_prescale_rate));
-  write_sequence((char*)&proc->triggerconfig.hwm_prescale_rate, sizeof(proc->triggerconfig.hwm_prescale_rate));
 
   write_sequence((char*)&proc->triggerconfig.enabled_flags, sizeof(proc->triggerconfig.enabled_flags));
   write_sequence((char*)&proc->triggerconfig.pre_trigger_window, sizeof(proc->triggerconfig.pre_trigger_window));
@@ -45,6 +43,8 @@ void fill_default_fspconfig(StreamProcessor* proc)
   write_sequence((char*)&proc->dsp_hwm.tracemap.map, sizeof(proc->dsp_hwm.tracemap.map));
   write_sequence((char*)&proc->dsp_hwm.tracemap.enabled, sizeof(proc->dsp_hwm.tracemap.enabled));
   write_sequence((char*)&proc->dsp_hwm.fpga_energy_threshold_adc, sizeof(proc->dsp_hwm.fpga_energy_threshold_adc));
+  write_sequence((char*)&proc->dsp_hwm.prescale_ratio, sizeof(proc->dsp_hwm.prescale_ratio));
+
 
   proc->dsp_ct.tracemap.n_mapped = FCIOMaxChannels;
   proc->dsp_ct.tracemap.n_enabled = FCIOMaxChannels;
@@ -112,12 +112,12 @@ int is_same_fspstatus(StreamProcessor *left, StreamProcessor *right)
 int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
 {
   assert(left->triggerconfig.hwm_min_multiplicity == right->triggerconfig.hwm_min_multiplicity);
-  assert(left->triggerconfig.hwm_prescale_ratio == right->triggerconfig.hwm_prescale_ratio);
+  // assert(left->triggerconfig.hwm_prescale_ratio == right->triggerconfig.hwm_prescale_ratio);
   assert(left->triggerconfig.wps_prescale_ratio == right->triggerconfig.wps_prescale_ratio);
   assert(left->triggerconfig.wps_coincident_sum_threshold == right->triggerconfig.wps_coincident_sum_threshold);
   assert(left->triggerconfig.wps_sum_threshold == right->triggerconfig.wps_sum_threshold);
-  assert(left->triggerconfig.wps_prescale_rate == right->triggerconfig.wps_prescale_rate);
-  assert(left->triggerconfig.hwm_prescale_rate == right->triggerconfig.hwm_prescale_rate);
+  // assert(left->triggerconfig.wps_prescale_rate == right->triggerconfig.wps_prescale_rate);
+  // assert(left->triggerconfig.hwm_prescale_rate == right->triggerconfig.hwm_prescale_rate);
   assert(0 == memcmp(&left->triggerconfig.enabled_flags, &right->triggerconfig.enabled_flags, sizeof(FSPWriteFlags)));
   assert(0 == memcmp(&left->triggerconfig.pre_trigger_window, &right->triggerconfig.pre_trigger_window, sizeof(Timestamp)));
   assert(0 == memcmp(&left->triggerconfig.post_trigger_window, &right->triggerconfig.post_trigger_window, sizeof(Timestamp)));
@@ -135,6 +135,7 @@ int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
   assert(left->dsp_hwm.tracemap.n_mapped == right->dsp_hwm.tracemap.n_mapped);
   assert(0 == memcmp(left->dsp_hwm.tracemap.map, right->dsp_hwm.tracemap.map, FCIOMaxChannels * sizeof(int)));
   assert(0 == memcmp(left->dsp_hwm.fpga_energy_threshold_adc, right->dsp_hwm.fpga_energy_threshold_adc, FCIOMaxChannels * sizeof(unsigned short)));
+  assert(0 == memcmp(left->dsp_hwm.prescale_ratio, right->dsp_hwm.prescale_ratio, FCIOMaxChannels * sizeof(unsigned short)));
 
   assert(left->dsp_ct.tracemap.n_enabled == right->dsp_ct.tracemap.n_enabled);
   assert(left->dsp_ct.tracemap.n_mapped == right->dsp_ct.tracemap.n_mapped);

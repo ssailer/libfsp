@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fcio.h"
 #include "timestamps.h"
 #include "flags.h"
 #include "stats.h"
@@ -11,13 +12,14 @@
 typedef struct {
 
   int hwm_min_multiplicity;
-  int hwm_prescale_ratio;
-  int wps_prescale_ratio;
+  int hwm_prescale_ratio[FCIOMaxChannels]; // the per channel prescale ratio
+  float hwm_prescale_rate[FCIOMaxChannels];
+  Timestamp hwm_prescale_timestamp[FCIOMaxChannels];
 
+  int wps_prescale_ratio;
   float wps_coincident_sum_threshold;
   float wps_sum_threshold;
   float wps_prescale_rate;
-  float hwm_prescale_rate;
 
   // the write flags which trigger the final `write` decision after
   // all processing
@@ -61,9 +63,6 @@ typedef struct StreamProcessor {
 
   int wps_prescale_ready_counter;
   Timestamp wps_prescale_timestamp;
-
-  int hwm_prescale_ready_counter;
-  Timestamp hwm_prescale_timestamp;
 
   // buffer configuration: written to FSPConfig
   Timestamp minimum_buffer_window;

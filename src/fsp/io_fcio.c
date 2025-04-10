@@ -1,5 +1,6 @@
 #include "io_fcio.h"
 #include "dsp.h"
+#include "fcio.h"
 #include "processor.h"
 #include "state.h"
 #include "timestamps.h"
@@ -158,17 +159,19 @@ static inline int fcio_get_fspconfig_wps(FCIOStream in, DSPWindowedPeakSum* dsp_
 }
 
 // FSPTriggerConfig
-static inline int fcio_put_fspconfig_trigger(FCIOStream stream, FSPTriggerConfig* config) {
-  if (!stream || !config)
+static inline int fcio_put_fspconfig_trigger(FCIOStream stream, StreamProcessor* processor) {
+  if (!stream || !processor)
     return -1;
+
+  FSPTriggerConfig* config = &processor->triggerconfig;
   FCIOWriteInt(stream, config->hwm_min_multiplicity);
-  FCIOWriteInt(stream, config->hwm_prescale_ratio);
+  FCIOWriteInts(stream, processor->dsp_hwm.tracemap.n_mapped, config->hwm_prescale_ratio);
   FCIOWriteInt(stream, config->wps_prescale_ratio);
 
   FCIOWriteFloat(stream, config->wps_coincident_sum_threshold);
   FCIOWriteFloat(stream, config->wps_sum_threshold);
   FCIOWriteFloat(stream, config->wps_prescale_rate);
-  FCIOWriteFloat(stream, config->hwm_prescale_rate);
+  FCIOWriteFloats(stream, processor->dsp_hwm.tracemap.n_mapped, config->hwm_prescale_rate);
 
   FCIOWrite(stream, sizeof(FSPWriteFlags), &config->enabled_flags);
   fcio_put_fsp_timestamp(stream, &config->pre_trigger_window);
@@ -185,13 +188,13 @@ static inline int fcio_get_fspconfig_trigger(FCIOStream stream, FSPTriggerConfig
   if (!stream || !config)
     return -1;
   FCIOReadInt(stream, config->hwm_min_multiplicity);
-  FCIOReadInt(stream, config->hwm_prescale_ratio);
+  FCIOReadInts(stream, FCIOMaxChannels, config->hwm_prescale_ratio);
   FCIOReadInt(stream, config->wps_prescale_ratio);
 
   FCIOReadFloat(stream, config->wps_coincident_sum_threshold);
   FCIOReadFloat(stream, config->wps_sum_threshold);
   FCIOReadFloat(stream, config->wps_prescale_rate);
-  FCIOReadFloat(stream, config->hwm_prescale_rate);
+  FCIOReadFloats(stream, FCIOMaxChannels, config->hwm_prescale_rate);
 
   FCIORead(stream, sizeof(FSPWriteFlags), &config->enabled_flags);
   fcio_get_fsp_timestamp(stream, &config->pre_trigger_window);
@@ -214,7 +217,7 @@ int FCIOPutFSPConfig(FCIOStream output, StreamProcessor* processor)
   FCIOWriteMessage(output, FCIOFSPConfig);
 
   /* StreamProcessor config */
-  fcio_put_fspconfig_trigger(output, &processor->triggerconfig);
+  fcio_put_fspconfig_trigger(output, processor);
   fcio_put_fspconfig_buffer(output, processor->buffer);
   fcio_put_fspconfig_hwm(output, &processor->dsp_hwm);
   fcio_put_fspconfig_ct(output, &processor->dsp_ct);
@@ -247,16 +250,20 @@ int FCIOPutFSPEvent(FCIOStream output, StreamProcessor* processor)
   FSPState* fsp_state = processor->fsp_state;
 
   FCIOWriteMessage(output, FCIOFSPEvent);
+  // write_flags:
   FCIOWrite(output, sizeof(fsp_state->write_flags), &fsp_state->write_flags);
+  // proc_flags:
   FCIOWrite(output, sizeof(fsp_state->proc_flags), &fsp_state->proc_flags);
 
   FCIOWrite(output, sizeof(fsp_state->obs.evt), &fsp_state->obs.evt);
   FCIOWrite(output, sizeof(fsp_state->obs.hwm), &fsp_state->obs.hwm);
   FCIOWrite(output, sizeof(fsp_state->obs.wps), &fsp_state->obs.wps);
 
+  // ct_obs:
   FCIOWriteInts(output, fsp_state->obs.ct.multiplicity, fsp_state->obs.ct.trace_idx);
   FCIOWriteUShorts(output, fsp_state->obs.ct.multiplicity, fsp_state->obs.ct.max);
 
+  // sub_event_list:
   FCIOWriteInts(output, fsp_state->obs.sub_event_list.size, fsp_state->obs.sub_event_list.start);
   FCIOWriteInts(output, fsp_state->obs.sub_event_list.size, fsp_state->obs.sub_event_list.stop);
   FCIOWriteFloats(output, fsp_state->obs.sub_event_list.size, fsp_state->obs.sub_event_list.wps_max);
@@ -271,16 +278,20 @@ int FCIOGetFSPEvent(FCIOData* input, StreamProcessor* processor)
   FSPState* fsp_state = processor->fsp_state;
 
   FCIOStream in = FCIOStreamHandle(input);
+  // write_flags:
   FCIORead(in, sizeof(fsp_state->write_flags), &fsp_state->write_flags);
+  // proc_flags:
   FCIORead(in, sizeof(fsp_state->proc_flags), &fsp_state->proc_flags);
 
   FCIORead(in, sizeof(fsp_state->obs.evt), &fsp_state->obs.evt);
   FCIORead(in, sizeof(fsp_state->obs.hwm), &fsp_state->obs.hwm);
   FCIORead(in, sizeof(fsp_state->obs.wps), &fsp_state->obs.wps);
 
+  // ct_obs:
   fsp_state->obs.ct.multiplicity = FCIOReadInts(in, FCIOMaxChannels, fsp_state->obs.ct.trace_idx)/sizeof(int);
   FCIOReadUShorts(in, FCIOMaxChannels, fsp_state->obs.ct.max);
 
+  // sub_event_list:
   fsp_state->obs.sub_event_list.size = FCIOReadInts(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.start)/sizeof(int);
   FCIOReadInts(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.stop);
   FCIOReadFloats(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.wps_max);

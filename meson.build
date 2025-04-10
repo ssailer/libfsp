@@ -7,7 +7,7 @@ project(
   license_files: 'LICENSE',
   default_options: [
     'warning_level=3',
-    'c_std=c11',
+    'c_std=c2x',
     'buildtype=release',
     'default_library=static',
     'prefer_static=true',

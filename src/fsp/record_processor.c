@@ -1,3 +1,4 @@
+#include "fsp/timestamps.h"
 #ifndef __APPLE__
 #define _XOPEN_SOURCE 500
 /* needed for random() */
@@ -160,6 +161,37 @@ static inline Timestamp generate_prescale_timestamp(float rate)
   return timestamp;
 }
 
+static inline int prescale_with_rate(Timestamp event_timestamp, Timestamp* prescale_timestamp, float prescale_rate, int loglevel)
+{
+  if (prescale_rate <= 0.0)
+    return 0;
+
+  if (prescale_timestamp->seconds == -1) {
+    /* initialize with the first event in the stream.*/
+    *prescale_timestamp = generate_prescale_timestamp(prescale_rate);
+
+    if (loglevel >= 4)
+      fprintf(stderr, "DEBUG hwm_prescale initializing first timestamp %ld.%09ld\n", prescale_timestamp->seconds, prescale_timestamp->nanoseconds);
+
+  } else if (timestamp_geq(event_timestamp, *prescale_timestamp)) {
+    // hwmflags.prescaled = 1;
+    Timestamp next_timestamp = generate_prescale_timestamp(prescale_rate);
+
+    if (loglevel >= 4)
+      fprintf(stderr, "DEBUG hwm_prescale event %ld.%09ld current prescale timestamp %ld.%09ld + %ld.%09ld\n",
+        event_timestamp.seconds, event_timestamp.nanoseconds,
+        prescale_timestamp->seconds, prescale_timestamp->nanoseconds,
+        next_timestamp.seconds, next_timestamp.nanoseconds
+      );
+
+    prescale_timestamp->seconds += next_timestamp.seconds;
+    prescale_timestamp->nanoseconds += next_timestamp.nanoseconds;
+
+    return 1;
+  }
+  return 0;
+}
+
 static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCIOState* state, Timestamp event_timestamp) {
   fcio_event* event = state->event;
 
@@ -167,52 +199,30 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
 
   fsp_dsp_hardware_majority(&processor->dsp_hwm, event->num_traces, event->trace_list, event->theader);
 
-  if (processor->dsp_hwm.multiplicity >= processor->triggerconfig.hwm_min_multiplicity) {
-    hwmflags.multiplicity_threshold = 1;
+  // one or more channels had an fpga_energy > 0 (was hardware triggered)
+  if (processor->dsp_hwm.n_hw_trg > 0)
+    hwmflags.hw_multiplicity = 1;
 
-    /* if majority is >= 1, then the following check is safe, otherwise think about what happens when majority == 0
-       if there is any channel with a majority above the threshold, it's a force trigger, if not, it should be
-       prescaled and not affect the rest of the datastream.
-    */
-    if (processor->dsp_hwm.n_below_minimum_multiplicity == processor->dsp_hwm.multiplicity) {
-      hwmflags.multiplicity_below = 1;
-    }
-  }
+  // enough channels had an fpga_energy >= software threshold and were more than the required multiplicity
+  if (processor->dsp_hwm.n_sw_trg >= processor->triggerconfig.hwm_min_multiplicity)
+    hwmflags.sw_multiplicity = 1;
 
-  if (hwmflags.multiplicity_below) {
-    processor->hwm_prescale_ready_counter++;
-    if (processor->triggerconfig.hwm_prescale_ratio > 0) {
-      if ((processor->hwm_prescale_ready_counter % processor->triggerconfig.hwm_prescale_ratio) == 0) {
-        hwmflags.prescaled = 1;
+  if (processor->dsp_hwm.n_sw_trg - processor->dsp_hwm.n_hw_trg > 0) {
+    for (int i = 0 ; i < processor->dsp_hwm.tracemap.n_mapped; i++) {
+      if ((processor->dsp_hwm.below_threshold_counter[i] % processor->triggerconfig.hwm_prescale_ratio[i]) == 0) {
+        hwmflags.prescaled = 
+          } else {
+            prescale_with_rate(Timestamp event_timestamp, Timestamp* prescale_timestamp, float prescale_rate, int loglevel)
+          }
       }
     }
-    else if (processor->triggerconfig.hwm_prescale_rate > 0.0) {
-      if (processor->hwm_prescale_timestamp.seconds == -1) {
-        /* initialize with the first event in the stream.*/
-        processor->hwm_prescale_timestamp = generate_prescale_timestamp(processor->triggerconfig.hwm_prescale_rate);
-        if (processor->loglevel >= 4) {
-          fprintf(stderr, "DEBUG hwm_prescale initializing first timestamp %ld.%09ld\n", processor->hwm_prescale_timestamp.seconds, processor->hwm_prescale_timestamp.nanoseconds);
-        }
-      }
-      else if (timestamp_geq(event_timestamp, processor->hwm_prescale_timestamp)) {
-        hwmflags.prescaled = 1;
-        Timestamp next_timestamp = generate_prescale_timestamp(processor->triggerconfig.hwm_prescale_rate);
-        if (processor->loglevel >= 4)
-          fprintf(stderr, "DEBUG hwm_prescale event %ld.%09ld current prescale timestamp %ld.%09ld + %ld.%09ld\n",
-            event_timestamp.seconds, event_timestamp.nanoseconds,
-            processor->hwm_prescale_timestamp.seconds, processor->hwm_prescale_timestamp.nanoseconds,
-            next_timestamp.seconds, next_timestamp.nanoseconds
-          );
-        processor->hwm_prescale_timestamp.seconds += next_timestamp.seconds;
-        processor->hwm_prescale_timestamp.nanoseconds += next_timestamp.nanoseconds;
-      }
-    }
+    else
   }
 
   return hwmflags;
 }
 
-static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCIOState* state, Timestamp event_timestamp) {
+static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCIOState* state) {
   fcio_config* config = state->config;
   fcio_event* event = state->event;
   WPSFlags wpsflags = {0};
@@ -235,7 +245,7 @@ static inline WPSFlags fsp_swt_windowed_peak_sum(StreamProcessor* processor, FCI
         processor->dsp_wps.sub_event_list->wps_max[i],
         processor->dsp_wps.sub_event_list->start[i],
         processor->dsp_wps.sub_event_list->stop[i],
-        processor->dsp_wps.sub_event_list->stop[i] - processor->dsp_wps.sub_event_list->start[i],
+        (processor->dsp_wps.sub_event_list->stop[i] - processor->dsp_wps.sub_event_list->start[i]),
         (processor->dsp_wps.sub_event_list->stop[i] - processor->dsp_wps.sub_event_list->start[i])*16e-3
       );
     }
@@ -322,10 +332,15 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
       fsp_state->obs.evt.nconsecutive = 0; // it's the default, process_timings will increase the number if consecutive events are following
 
       if (hwm_cfg->enabled) {
-        proc_flags.hwm = fsp_swt_hardware_majority(processor, state, fsp_state->timestamp);
-        fsp_state->obs.hwm.multiplicity = hwm_cfg->multiplicity;
+        proc_flags.hwm = fsp_swt_hardware_majority(processor, state);
+        fsp_state->obs.hwm.hw_multiplicity = hwm_cfg->n_hw_trg;
         fsp_state->obs.hwm.max_value = hwm_cfg->max_value;
         fsp_state->obs.hwm.min_value = hwm_cfg->min_value;
+        fsp_state->obs.hwm.sw_multiplicity = hwm_cfg->n_sw_trg;
+        fsp_state->obs.hwm.n_prescaled = hwm_cfg->n_prescaled;
+        for (int i = 0; i < hwm_cfg->n_prescaled; i++) {
+          fsp_state->obs.hwm.prescaled_trace_idx[i] = hwm_cfg->prescaled_trace_idx[i];
+        }
       }
 
       if (ct_cfg->enabled) {
@@ -344,7 +359,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
 
       if (wps_cfg->enabled) {
         processor->dsp_wps.sub_event_list = &fsp_state->obs.sub_event_list; //load current trigger_list into config struct
-        proc_flags.wps = fsp_swt_windowed_peak_sum(processor, state, fsp_state->timestamp);
+        proc_flags.wps = fsp_swt_windowed_peak_sum(processor, state);
         fsp_state->obs.wps.sum_value = wps_cfg->max_peak_sum_value;
         fsp_state->obs.wps.sum_offset = wps_cfg->max_peak_sum_offset;
         fsp_state->obs.wps.max_single_peak_value = wps_cfg->max_peak_value;
@@ -400,8 +415,6 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                       processor->dsp_ct.tracemap.map[i]);
             }
           }
-        } else {
-          return -1;
         }
       }
 
@@ -413,11 +426,10 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
               fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->dsp_wps.tracemap.map[i]);
             }
           }
-        } else {
+        } else if (processor->loglevel >= 2){
           fprintf(stderr,
-                  "CRITICAL fsp_process_fcio_state: during conversion of peak sum channels, one channel could not "
+                  "WARNING fsp_process_fcio_state: during conversion of peak sum channels, one channel could not "
                   "be mapped.\n");
-          return -1;
         }
 
         if (wps_cfg->sum_window_stop_sample < 0)
@@ -471,11 +483,10 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                       processor->dsp_hwm.tracemap.map[i]);
             }
           }
-        } else {
+        } else if (processor->loglevel >= 2) {
           fprintf(stderr,
-                  "CRITICAL fsp_process_fcio_state: during conversion of hw majority channels, one channel could "
+                  "WARNING fsp_process_fcio_state: during conversion of hw majority channels, one channel could "
                   "not be mapped.\n");
-          return -1;
         }
       }
 

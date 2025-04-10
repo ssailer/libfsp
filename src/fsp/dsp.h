@@ -58,12 +58,18 @@ typedef struct DSPWindowedPeakSum {
 } DSPWindowedPeakSum;
 
 typedef struct DSPHardwareMultiplicity {
+  /* configuration */
   FSPTraceMap tracemap;
   unsigned short fpga_energy_threshold_adc[FCIOMaxChannels];
 
+  /* tmp values */
+  int below_threshold_counter[FCIOMaxChannels]; // counts the number of events eligible for prescaling
+
   /* result fields */
-  int multiplicity; // multiplicity of hardware energy values
-  int n_below_minimum_multiplicity; // counts the number of channels below fpga_energy_threshold_adc but > 0
+  int n_hw_trg; // multiplicity of hardware energy values / non-zero == triggered
+  int n_sw_trg; // multiplicity of hw energy > sw threshold
+  int n_prescaled; // counts the number of channels that were prescaled
+  int prescaled_trace_idx[FCIOMaxChannels]; // the list of trace_idx which were prescaled
   unsigned short max_value; // the largest channel hw value
   unsigned short min_value; // the smallest channel hw value, but > 0
 
