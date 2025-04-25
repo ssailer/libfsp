@@ -94,6 +94,7 @@ void fill_default_fspevent(FSPState* state)
   write_sequence((char*)&state->obs.sub_event_list.start, sizeof(state->obs.sub_event_list.start));
   write_sequence((char*)&state->obs.sub_event_list.stop, sizeof(state->obs.sub_event_list.stop));
   write_sequence((char*)&state->obs.sub_event_list.wps_max, sizeof(state->obs.sub_event_list.wps_max));
+  write_sequence((char*)&state->obs.ps.hwm_prescaled_trace_idx, sizeof(state->obs.ps.hwm_prescaled_trace_idx));
 
 }
 
@@ -112,12 +113,12 @@ int is_same_fspstatus(StreamProcessor *left, StreamProcessor *right)
 int is_same_fspconfig(StreamProcessor *left, StreamProcessor *right)
 {
   assert(left->triggerconfig.hwm_min_multiplicity == right->triggerconfig.hwm_min_multiplicity);
-  assert(left->triggerconfig.hwm_prescale_ratio == right->triggerconfig.hwm_prescale_ratio);
+  assert(0 == memcmp(left->triggerconfig.hwm_prescale_ratio, right->triggerconfig.hwm_prescale_ratio, sizeof(left->triggerconfig.hwm_prescale_ratio)));
   assert(left->triggerconfig.wps_prescale_ratio == right->triggerconfig.wps_prescale_ratio);
   assert(left->triggerconfig.wps_coincident_sum_threshold == right->triggerconfig.wps_coincident_sum_threshold);
   assert(left->triggerconfig.wps_sum_threshold == right->triggerconfig.wps_sum_threshold);
   assert(left->triggerconfig.wps_prescale_rate == right->triggerconfig.wps_prescale_rate);
-  assert(left->triggerconfig.hwm_prescale_rate == right->triggerconfig.hwm_prescale_rate);
+  assert(0 == memcmp(left->triggerconfig.hwm_prescale_rate, right->triggerconfig.hwm_prescale_rate, sizeof(left->triggerconfig.hwm_prescale_rate)));
   assert(0 == memcmp(&left->triggerconfig.enabled_flags, &right->triggerconfig.enabled_flags, sizeof(FSPWriteFlags)));
   assert(0 == memcmp(&left->triggerconfig.pre_trigger_window, &right->triggerconfig.pre_trigger_window, sizeof(Timestamp)));
   assert(0 == memcmp(&left->triggerconfig.post_trigger_window, &right->triggerconfig.post_trigger_window, sizeof(Timestamp)));
@@ -180,6 +181,7 @@ int is_same_fspevent(FSPState *left, FSPState *right)
   assert(0 == memcmp(left->obs.sub_event_list.start, right->obs.sub_event_list.start, right->obs.sub_event_list.size ));
   assert(0 == memcmp(left->obs.sub_event_list.stop, right->obs.sub_event_list.stop, right->obs.sub_event_list.size ));
   assert(0 == memcmp(left->obs.sub_event_list.wps_max, right->obs.sub_event_list.wps_max, right->obs.sub_event_list.size ));
+  assert(0 == memcmp(left->obs.ps.hwm_prescaled_trace_idx, right->obs.ps.hwm_prescaled_trace_idx, right->obs.ps.n_hwm_prescaled ));
 
   return 1;
 }
