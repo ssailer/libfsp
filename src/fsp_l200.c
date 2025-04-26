@@ -1,7 +1,6 @@
 #include "fsp_l200.h"
 
 #include <assert.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 int FSP_L200_SetAuxParameters(StreamProcessor* processor, FSPTraceFormat format, int pulser_channel,
