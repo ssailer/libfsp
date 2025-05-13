@@ -1,7 +1,4 @@
 #include "io.h"
-#include "buffer.h"
-#include "dsp.h"
-#include "processor.h"
 
 #include <assert.h>
 #include <stdlib.h>
