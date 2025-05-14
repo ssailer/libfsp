@@ -291,7 +291,7 @@ int FCIOGetFSPEvent(FCIOData* input, StreamProcessor* processor)
   FCIOReadInts(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.stop);
   FCIOReadFloats(in, FCIOMaxSamples, fsp_state->obs.sub_event_list.wps_max);
 
-  fsp_state->obs.ps.n_hwm_prescaled = FCIOWriteInts(in, FCIOMaxChannels, fsp_state->obs.ps.hwm_prescaled_trace_idx);
+  fsp_state->obs.ps.n_hwm_prescaled = FCIOReadInts(in, FCIOMaxChannels, fsp_state->obs.ps.hwm_prescaled_trace_idx);
 
   return 0;
 }
