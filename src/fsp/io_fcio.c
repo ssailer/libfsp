@@ -462,7 +462,7 @@ static inline size_t fspevent_size(FSPState* fspstate) {
   total_size += frame_header + sizeof(*((SubEventList){0}).start) * fspstate->obs.sub_event_list.size;
   total_size += frame_header + sizeof(*((SubEventList){0}).stop) * fspstate->obs.sub_event_list.size;
   total_size += frame_header + sizeof(*((SubEventList){0}).wps_max) * fspstate->obs.sub_event_list.size;
-  total_size += frame_header + sizeof(*((prescaler_obs){0}).hwm_prescaled_trace_idx) * fspstate->obs.ps.n_hwm_prescaled;
+  total_size += frame_header + sizeof(*((prescale_obs){0}).hwm_prescaled_trace_idx) * fspstate->obs.ps.n_hwm_prescaled;
 
   return total_size;
 }
