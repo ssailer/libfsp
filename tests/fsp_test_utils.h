@@ -55,7 +55,7 @@ void fill_default_fspconfig(StreamProcessor* proc)
 
   proc->dsp_wps.apply_gain_scaling = 1;
   proc->dsp_wps.sum_window_size = FCIOMaxSamples/2;
-  proc->dsp_wps.sum_window_start_sample = 0;
+  proc->dsp_wps.sum_window_start_sample = 1;
   proc->dsp_wps.sum_window_stop_sample = FCIOMaxSamples;
   proc->dsp_wps.sub_event_sum_threshold = 10.0;
 
@@ -94,6 +94,7 @@ void fill_default_fspevent(FSPState* state)
   write_sequence((char*)&state->obs.sub_event_list.start, sizeof(state->obs.sub_event_list.start));
   write_sequence((char*)&state->obs.sub_event_list.stop, sizeof(state->obs.sub_event_list.stop));
   write_sequence((char*)&state->obs.sub_event_list.wps_max, sizeof(state->obs.sub_event_list.wps_max));
+  state->obs.ps.n_hwm_prescaled = FCIOMaxChannels;
   write_sequence((char*)&state->obs.ps.hwm_prescaled_trace_idx, sizeof(state->obs.ps.hwm_prescaled_trace_idx));
 
 }
