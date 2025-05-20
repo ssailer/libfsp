@@ -1,7 +1,7 @@
 #include "io_fcio.h"
 #include "dsp.h"
 #include "fcio.h"
-#include "fsp/observables.h"
+#include "observables.h"
 #include "processor.h"
 #include "state.h"
 #include "timestamps.h"
