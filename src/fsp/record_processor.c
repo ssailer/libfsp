@@ -331,7 +331,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                     state->event->timestamp[3]);
         }
       }
-      write_flags.event = fsp_evt_flags(processor, state);
+      proc_flags.evt = fsp_evt_flags(processor, state);
       fsp_state->obs.evt.nconsecutive = 0; // it's the default, process_timings will increase the number if consecutive events are following
 
       if (hwm_cfg->enabled) {
@@ -554,15 +554,15 @@ static inline void fsp_process_state_timings(StreamProcessor* processor, FSPStat
     }
   }
 
-  if (fsp_state->write_flags.event.consecutive) {
+  if (fsp_state->proc_flags.evt.consecutive) {
     FSPState* update_fsp_state = NULL;
     int previous_counter = 0;
     int nconsectutive = 1;
     while ( (update_fsp_state = FSPBufferGetState(processor->buffer, previous_counter--)) ) {
       if (!update_fsp_state->has_timestamp)
         continue;
-      if (!update_fsp_state->write_flags.event.consecutive) {
-        update_fsp_state->write_flags.event.extended = 1;
+      if (!update_fsp_state->proc_flags.evt.consecutive) {
+        update_fsp_state->proc_flags.evt.extended = 1;
         update_fsp_state->obs.evt.nconsecutive = nconsectutive;
         break;
       } else {
