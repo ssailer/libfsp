@@ -193,8 +193,7 @@ static inline int prescale_by_rate(Timestamp event_timestamp, Timestamp* prescal
 static inline int prescale_by_ratio(int counter, int ratio)
 {
   if (ratio)
-    if (counter % ratio == 0)
-      return 1;
+    return (counter % ratio == 0) * counter;
 
   return 0;
 }
@@ -212,11 +211,13 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
   // enough channels had an fpga_energy >= software threshold and were more than the required multiplicity
   hwmflags.sw_multiplicity = (processor->dsp_hwm.n_sw_trg >= processor->triggerconfig.hwm_min_multiplicity);
 
-  if (processor->dsp_hwm.n_sw_trg > processor->dsp_hwm.n_hw_trg) {
+  // if not all hw triggers produced a software trigger, a possible prescale event was found
+  if (processor->dsp_hwm.n_sw_trg < processor->dsp_hwm.n_hw_trg) {
     for (int i = 0 ; i < processor->dsp_hwm.tracemap.n_mapped; i++) {
       if (prescale_by_ratio(processor->dsp_hwm.below_threshold_counter[i], processor->triggerconfig.hwm_prescale_ratio[i])) {
         hwmflags.prescaled = 1;
         processor->prescaler.hwm_prescaled_trace_idx[processor->prescaler.n_hwm_prescaled++] = processor->dsp_hwm.tracemap.map[i];
+        processor->dsp_hwm.below_threshold_counter[i] = 0;
       }
       if (prescale_by_rate(event_timestamp, &processor->prescaler.hwm_prescale_timestamp[i], processor->triggerconfig.hwm_prescale_rate[i], processor->loglevel)) {
         hwmflags.prescaled = 1;
