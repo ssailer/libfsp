@@ -202,6 +202,7 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
   fcio_event* event = state->event;
 
   HWMFlags hwmflags = {0};
+  processor->prescaler.n_hwm_prescaled = 0;
 
   fsp_dsp_hardware_majority(&processor->dsp_hwm, event->num_traces, event->trace_list, event->theader);
 
