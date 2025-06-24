@@ -88,7 +88,7 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
     for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++)
       processor->triggerconfig.hwm_prescale_ratio[i] = prescale_ratio; // set the same preratio for all channels.
   }
-  else {
+  else if (prescale_ratio < 0) {
     fprintf(stderr, "CRITICAL Ge prescale_ratio needs to be >= 0 is %d\n", prescale_ratio);
     return 0;
   }
@@ -152,7 +152,7 @@ int FSP_L200_SetSiPMParameters(StreamProcessor* processor, int nchannels, int* c
     prescaler->wps_enabled = 1;
     processor->triggerconfig.wps_prescale_ratio = prescale_ratio;
   }
-  else {
+  else if (prescale_ratio < 0){
     fprintf(stderr, "CRITICAL SiPM prescale_ratio needs to be >= 0 is %d\n", prescale_ratio);
     return 0;
   }
