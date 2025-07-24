@@ -10,6 +10,8 @@ fsp_test_record_compatibility = executable(
   dependencies: [fsp_dep],
 )
 
+dsp_tests = executable('dsp_tests', 'dsp_tests.c', dependencies: [fsp_dep])
+
 test(
   'fsp_test_record_sizes',
   fsp_test_record_sizes,
@@ -31,3 +33,4 @@ test(
   suite: ['fsp'],
   args: ['fsp_test_record_compatibility.dat'],
 )
+test('dsp_tests', dsp_tests, is_parallel: true, suite: ['fsp'])

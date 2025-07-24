@@ -110,3 +110,4 @@ void fsp_dsp_channel_threshold(DSPChannelThreshold* cfg, int nsamples, int num_t
 
 
 void tracewindow(int n, float *trace, int ss, double gain, float *out);
+int sma_4(float *in, float *out, float *workspace, int nsamples, int width, int *start, int *stop, float *gain, float *offset);

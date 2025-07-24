@@ -22,86 +22,131 @@ void tracewindow_int(int n, int *trace, int ss, double gain, float *out) {
   for (i = n - ss; i < n; i++) out[i] = trace[i] * gain * (n - i - 1) * (n - i - 1) / ss / ss;
 }
 
-int sma_4(float *in, float *out, float *tmp, int start, int stop, int nsamples, int shaping_width,
-          float scale_parameter) {
+/** @brief Applies two left-right moving averages of `width` samples to
+ * `in[start:stop)` and stores the result in `out[start:stop)`.
+ *
+ * `workspace` must be of length `nsamples + 4 * width + 2` and zero-filled for correct results.
+ *
+ * `start` and `stop` can be used to calculate a reduced region of the filtered output.
+ * Either can be NULL, which is equivalent to providing `*start=0` and `*stop=nsamples`, respectively.
+ *
+ * Each step in `width` increases the number of samples experiencing edge
+ * effects like `2 * width - 2`. The first valid output sample is `out[max(2 * width - 2, start)]`,
+ * the last valid sample is `out[min(nsamples - 2 * width + 1, stop - 1)]`.
+ * If provided, `start` and `stop` are set to these limits.
+ * The samples outside of these limits are not calculated and remain untouched in `out`.
+ * This allows in-place modification when `in == out`.
+ *
+ * `scale` and `offset` allow for linear scaling of `out`:
+ * `out = *offset + *scale * sma_4_out[:]`
+ *
+ * The `width` parameter approximately derives from the standard deviation (sigma) of a gaussian kernel like:
+ * width = sqrt(3 * pow((sigma),2) + 1))
+ *
+ * Automated tests check the filter response up to a width of 2500
+ * and a delta peak amplitude of 1.0f and FLT_MAX/(width**4) ~= 9.4e24
+ * for stability of mode, mean and integral.
+ * The user is therefore advised to take floating point precision into account and limit usage to the tested values.
+ *
+ * @return The number of invalid samples at the beginning and end of `out`.
+ * This is only useful if start and stop are not used. */
+int sma_4(float *in, float *out, float *workspace, int nsamples, int width, int *start, int *stop, float *scale, float *offset) {
+
   const int dev_debug = 0;
 
-  const int n = shaping_width;
-  const int presum_length = 4 * n - 4;
-  const int offset = presum_length / 2;
+  width = width > 0 ? width : 1;
+  const int presum_length = 4 * width - 4;
+  const int delay = presum_length / 2;
+  const double shift = offset ? *offset : 0.0;
+  const double divisor = (double)width * width * width * width / (scale ? *scale : 1.0);
 
-  const float divisor = shaping_width * shaping_width * shaping_width * shaping_width / scale_parameter;
+  int i0 = 0;
+  if (start && *start > delay)
+    i0 = *start - delay;
+
+  int i1 = nsamples;
+  if (stop && *stop >= 0 && *stop < nsamples - delay)
+    i1 = *stop + delay;
 
   if (dev_debug)
-    fprintf(stderr, "n=%d offset=%d presum_length=%d divisor=%f nsamples=%d\n", n, offset, presum_length, divisor,
-            nsamples);
+    fprintf(stderr, "n=%d delay=%d presum_length=%d divisor=%f nsamples=%d\n",
+            width, delay, presum_length, divisor, nsamples);
 
   double acc[5] = {0};
 
-  float *t0a = &tmp[4 * n + 3];
-  float *t0b = t0a - n;
-  float *t1a = &tmp[3 * n + 2];
-  float *t1b = t1a - n;
-  float *t2a = &tmp[2 * n + 1];
-  float *t2b = t2a - n;
-  float *t3a = &tmp[1 * n + 0];
-  float *t3b = t3a - n;
+  float *t0a = &workspace[4 * width + 3];
+  float *t0b = t0a - width;
+  float *t1a = &workspace[3 * width + 2];
+  float *t1b = t1a - width;
+  float *t2a = &workspace[2 * width + 1];
+  float *t2b = t2a - width;
+  float *t3a = &workspace[1 * width + 0];
+  float *t3b = t3a - width;
 
-  if (dev_debug) fprintf(stderr, "pointer offsets tmp from tmp start:\n");
-  if (dev_debug)
-    fprintf(stderr, "t0a=%ld t0b=%ld t1a=%ld t1b=%ld t2a=%ld t2b=%ld t3a=%ld t3b=%ld\n", t0a - tmp, t0b - tmp,
-            t1a - tmp, t1b - tmp, t2a - tmp, t2b - tmp, t3a - tmp, t3b - tmp);
+  float *pin = in + i0;
+  float *pout = out + i0 + delay;
 
-  float *pin = in + start;
-  float *pout = out + start + offset;
-
-  if (dev_debug) fprintf(stderr, "pin=%ld pout=%ld\n", pin - in, pout - out);
-
-  /* pre-sum */
-
-  int i = 0;
-  for (i = start; i < start + presum_length && i < stop; i++) {
-    acc[0] += *pin++;
-    *t0a = acc[0];
-    *t1a = (acc[1] += *t0a++ - *t0b++);
-    *t2a = (acc[2] += *t1a++ - *t1b++);
-    *t3a = (acc[3] += *t2a++ - *t2b++);
-    acc[4] = *t3a++ - *t3b++;
-
-    if (dev_debug)
-      fprintf(stderr,
-              "presum   pin=%2ld pout=%2ld t0a=%2ld t0b=%2ld t1a=%2ld t1b=%2ld t2a=%2ld t2b=%2ld t3a=%2ld t3b=%2ld ",
-              pin - in - 1, pout - out, t0a - tmp - 1, t0b - tmp - 1, t1a - tmp - 1, t1b - tmp - 1, t2a - tmp - 1,
-              t2b - tmp - 1, t3a - tmp - 1, t3b - tmp - 1);
-    if (dev_debug)
-      fprintf(stderr, "i=%2d acc %3.6f %3.6f %3.6f %3.6f %3.6f out=%e\n", i, acc[0], acc[1], acc[2], acc[3], acc[4],
-              acc[4] / divisor);
+  if (dev_debug) {
+    fprintf(stderr, "pointer delays workspace from workspace start:\n"
+      "t0a=%ld t0b=%ld t1a=%ld t1b=%ld t2a=%ld t2b=%ld t3a=%ld t3b=%ld\n",
+      t0a - workspace, t0b - workspace, t1a - workspace, t1b - workspace,
+      t2a - workspace, t2b - workspace, t3a - workspace, t3b - workspace);
+    fprintf(stderr, "pin=%ld pout=%ld\n", pin - in, pout - out);
   }
-  /* write-out */
 
-  for (i = start + presum_length; i < nsamples && i < stop; i++) {
+  // calculate pre-sum
+  while (i0++ < presum_length) {
     acc[0] += *pin++;
     *t0a = acc[0];
     *t1a = (acc[1] += *t0a++ - *t0b++);
     *t2a = (acc[2] += *t1a++ - *t1b++);
     *t3a = (acc[3] += *t2a++ - *t2b++);
     acc[4] = *t3a++ - *t3b++;
-    *pout++ = (acc[4]) / divisor;
+
+    if (dev_debug) {
+      fprintf(stderr,"presum pin=%2ld pout=%2ld t0a=%2ld t0b=%2ld t1a=%2ld t1b=%2ld t2a=%2ld t2b=%2ld t3a=%2ld t3b=%2ld ",
+              pin - in - 1, pout - out, t0a - workspace - 1, t0b - workspace - 1, t1a - workspace - 1,
+              t1b - workspace - 1, t2a - workspace - 1, t2b - workspace - 1, t3a - workspace - 1, t3b - workspace - 1);
+      fprintf(stderr, "i=%2d acc %3.6f %3.6f %3.6f %3.6f %3.6f out=%e\n",
+              i0, acc[0], acc[1], acc[2], acc[3], acc[4], acc[4] / divisor);
+    }
+  }
+
+  // calculate sum and write out
+  while (i0++ < i1) {
+    acc[0] += *pin++;
+    *t0a = acc[0];
+    *t1a = (acc[1] += *t0a++ - *t0b++);
+    *t2a = (acc[2] += *t1a++ - *t1b++);
+    *t3a = (acc[3] += *t2a++ - *t2b++);
+    acc[4] = *t3a++ - *t3b++;
+    *pout++ = acc[4] / divisor + shift;
 
     if (dev_debug)
       fprintf(stderr,
-              "writeout pin=%2ld pout=%2ld t0a=%2ld t0b=%2ld t1a=%2ld t1b=%2ld t2a=%2ld t2b=%2ld t3a=%2ld t3b=%2ld ",
-              pin - in - 1, pout - out - 1, t0a - tmp - 1, t0b - tmp - 1, t1a - tmp - 1, t1b - tmp - 1, t2a - tmp - 1,
-              t2b - tmp - 1, t3a - tmp - 1, t3b - tmp - 1);
+        "writeout pin=%2ld pout=%2ld t0a=%2ld t0b=%2ld t1a=%2ld t1b=%2ld t2a=%2ld t2b=%2ld t3a=%2ld t3b=%2ld ",
+        pin - in - 1, pout - out - 1, t0a - workspace - 1, t0b - workspace - 1, t1a - workspace - 1, t1b - workspace - 1, t2a - workspace - 1,
+        t2b - workspace - 1, t3a - workspace - 1, t3b - workspace - 1);
     if (dev_debug)
-      fprintf(stderr, "i=%2d acc %3.6f %3.6f %3.6f %3.6f %3.6f out=%e\n", i, acc[0], acc[1], acc[2], acc[3], acc[4],
+      fprintf(stderr, "i=%2d acc %3.6f %3.6f %3.6f %3.6f %3.6f out=%e\n", i0, acc[0], acc[1], acc[2], acc[3], acc[4],
               *(pout - 1));
   }
+  if (dev_debug) {
+    fprintf(stderr,
+      "writeout pin=%2ld pout=%2ld t0a=%2ld t0b=%2ld t1a=%2ld t1b=%2ld t2a=%2ld t2b=%2ld t3a=%2ld t3b=%2ld ",
+      pin - in - 1, pout - out - 1, t0a - workspace - 1, t0b - workspace - 1, t1a - workspace - 1, t1b - workspace - 1, t2a - workspace - 1,
+      t2b - workspace - 1, t3a - workspace - 1, t3b - workspace - 1);
+    fprintf(stderr, "distances %d %d %ld: max_length %ld \n", delay, presum_length, (out + nsamples) - pout, (t0a - workspace));
+  }
 
-  if (dev_debug) fprintf(stderr, "distances %d %d %ld\n", offset, presum_length, (out + nsamples) - pout);
+  // adjust *start, *stop to valid region
+  if (start && *start < delay)
+    *start = delay;
+  if (stop && (*stop < 0 || *stop > nsamples - delay))
+    *stop = nsamples - delay;
 
-  /* offset is centered in the middle of the presum-length, equal to the total width needed for all averaging */
-  return offset;
+  // Returns the number of invalid (unchanged) samples at the beginning and end of `out`.
+  return delay;
 }
 
 int centered_moving_average_f32(float *x, float *y, int start, int stop, int nsamples, int shaping_width) {
@@ -379,10 +424,7 @@ void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int s
   }
 
   gain_scaling = shaping_width_samples * 1.5;
-  int offset = sma_4(diff_trace, work_trace, work_trace2, *start, *stop, nsamples, shaping_width_samples,
-                     (apply_gain_scaling) ? gain_scaling : 1.0);
-  *start += offset;
-  *stop -= offset;
+  sma_4(diff_trace, work_trace, work_trace2, nsamples, shaping_width_samples, start, stop, (apply_gain_scaling) ? &gain_scaling : NULL, NULL);
 
   int _largest_peak_offset = -1;
   float _largest_peak = fsp_dsp_local_peaks_f32(work_trace, peak_trace, *start, *stop, nsamples, gain_adc,

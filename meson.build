@@ -2,7 +2,7 @@ project(
   'libfsp',
   'c',
   'cpp',
-  version: '1.0.0',
+  version: '1.0.1',
   license: 'MPL-2.0',
   license_files: 'LICENSE',
   default_options: [
