@@ -12,10 +12,6 @@ static inline int load_sipm_tracemap(int max_channels, int *channels) {
   for (int i = 1; i <= last_card; i++) {
     int card_address = baseaddress + i * 0x10;  // 0x10 == 16
     for (int j = 0; j < max_card_slots && nchannels < max_channels; j++) {
-      if (i == 1 && j < 2) {
-        // First 2 Channels not connected
-        continue;
-      }
       channels[nchannels++] = (card_address << 16) + j;
     }
   }
