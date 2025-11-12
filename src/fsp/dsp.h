@@ -81,6 +81,7 @@ typedef struct DSPChannelThreshold {
   unsigned short thresholds[FCIOMaxChannels];
   /* result fields */
   unsigned short max_values[FCIOMaxChannels];
+  unsigned short max_offset[FCIOMaxChannels];
   int multiplicity;
 
   int enabled;
@@ -98,7 +99,7 @@ void fsp_dsp_diff_and_smooth(int nsamples, int *start, int *stop, unsigned int s
 int fsp_dsp_diff_and_smooth_pre_samples(unsigned int shaping_width_samples, float lowpass);
 int fsp_dsp_diff_and_smooth_post_samples(unsigned int shaping_width_samples, float lowpass);
 
-unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int stop, int nsamples, unsigned short threshold);
+unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int stop, int nsamples, unsigned short threshold, int *offset);
 
 float fsp_dsp_local_peaks_f32(float *input_trace, float *peak_trace, int start, int stop, int nsamples,
                                const float gain_adc, const float threshold_pe, float *peak_times,

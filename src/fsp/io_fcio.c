@@ -273,6 +273,8 @@ int FCIOPutFSPEvent(FCIOStream output, StreamProcessor* processor)
 
   FCIOWriteUShorts(output, fsp_state->obs.ps.n_hwm_prescaled, fsp_state->obs.ps.hwm_prescaled_trace_idx);
 
+  FCIOWriteUShorts(output, fsp_state->obs.ct.multiplicity, fsp_state->obs.ct.offset);
+
   return FCIOFlush(output);
 }
 int FCIOGetFSPEvent(FCIOData* input, StreamProcessor* processor)
@@ -302,6 +304,8 @@ int FCIOGetFSPEvent(FCIOData* input, StreamProcessor* processor)
 
   readbytes = FCIOReadUShorts(in, FCIOMaxChannels, fsp_state->obs.ps.hwm_prescaled_trace_idx);
   fsp_state->obs.ps.n_hwm_prescaled = (readbytes >= 0) ? readbytes/sizeof(unsigned short) : 0;
+
+  FCIOReadUShorts(in, FCIOMaxChannels, fsp_state->obs.ct.offset);
 
   return 0;
 }
@@ -473,6 +477,7 @@ static inline size_t fspevent_size(FSPState* fspstate) {
   total_size += frame_header + sizeof(*((SubEventList){0}).stop) * fspstate->obs.sub_event_list.size;
   total_size += frame_header + sizeof(*((SubEventList){0}).wps_max) * fspstate->obs.sub_event_list.size;
   total_size += frame_header + sizeof(*((prescale_obs){0}).hwm_prescaled_trace_idx) * fspstate->obs.ps.n_hwm_prescaled;
+  total_size += frame_header + sizeof(*((ct_obs){0}).offset) * fspstate->obs.ct.multiplicity;
 
   return total_size;
 }

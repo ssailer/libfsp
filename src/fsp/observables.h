@@ -46,6 +46,8 @@ typedef struct ct_obs {
   int trace_idx[FCIOMaxChannels];
   // the maximum per channel
   unsigned short max[FCIOMaxChannels];
+  // the offset of the first sample above threshold
+  unsigned short offset[FCIOMaxChannels];
 
 } ct_obs;
 

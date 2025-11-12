@@ -356,6 +356,7 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
           if (ct_cfg->max_values[i]) {
             int trace_idx = ct_cfg->tracemap.map[i];
             fsp_state->obs.ct.max[n] = ct_cfg->max_values[i];
+            fsp_state->obs.ct.offset[n] = ct_cfg->max_offset[i];
             fsp_state->obs.ct.trace_idx[n] = trace_idx;
             n++;
           }

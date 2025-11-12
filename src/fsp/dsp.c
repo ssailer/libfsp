@@ -549,7 +549,7 @@ void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, uns
 
 }
 
-unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int stop, int nsamples, unsigned short threshold) {
+unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int stop, int nsamples, unsigned short threshold, int* offset) {
   assert(start >= 0);
   assert(stop <= nsamples);
 
@@ -557,8 +557,10 @@ unsigned short fsp_dsp_trace_larger_than(unsigned short *trace, int start, int s
   for (int i = start; i < stop; i++) {
     unsigned short ampl = trace[i];
 
-    if (ampl < found)
+    if (ampl < found) {
+      if (offset) *offset = i;
       return found;
+    }
 
     if (ampl > threshold && ampl > found)
       found = ampl;
@@ -579,8 +581,10 @@ void fsp_dsp_channel_threshold(DSPChannelThreshold* cfg, int nsamples, int num_t
     unsigned short *trace = traces[trace_idx];
     unsigned short baseline = theaders[trace_idx][0];
 
-    cfg->max_values[map_idx] = fsp_dsp_trace_larger_than(trace, 0, nsamples, nsamples, cfg->thresholds[map_idx] + baseline);
+    int offset;
+    cfg->max_values[map_idx] = fsp_dsp_trace_larger_than(trace, 0, nsamples, nsamples, cfg->thresholds[map_idx] + baseline, &offset);
     if (cfg->max_values[map_idx]) {
+      cfg->max_offset[map_idx] = offset;
       nfound++;
     }
   }
